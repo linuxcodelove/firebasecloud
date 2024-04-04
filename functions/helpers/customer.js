@@ -23,6 +23,7 @@ exports.setPayload = (obj, ind = null) => {
     total_spent,
     visits_count,
     whatsapp_number,
+    created_at,
   } = obj;
 
   const obj2 = {
@@ -47,12 +48,16 @@ exports.setPayload = (obj, ind = null) => {
     total_spent,
     visits_count,
     whatsapp_number,
+    created_at
   };
   if (ind) {
     obj2.id = ind;
     obj2.dob = Timestamp.fromDate(new Date(obj2.dob)) || null;
     obj2.last_visited_date = Timestamp.fromDate(
       new Date(obj2.last_visited_date)
+    );
+    obj2.created_at = Timestamp.fromDate(
+      new Date(obj2.created_at)
     );
   }
   return obj2;

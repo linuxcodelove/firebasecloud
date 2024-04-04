@@ -210,7 +210,7 @@ exports.getByFeedback = async (req, res) => {
 
     querySnapshot.forEach((doc) => {
       const customer = {
-        customer_id: doc.id,
+        customer_id: doc.data().customer_id,
         customer_name: doc.data().customer_name,
         visits_count: doc.data().visits_count,
         time_spend_in_minutes: doc.data().time_spend_in_minutes,
@@ -254,7 +254,7 @@ exports.visitedCustomerInCertainPeriod = async (req, res) => {
 
     querySnapshot.forEach((doc) => {
       const customer = {
-        customer_id: doc.id,
+        customer_id: doc.data().customer_id,
         customer_name: doc.data().customer_name,
         time_spend_in_minutes: doc.data().time_spend_in_minutes,
         visit_date_time: new Date(doc.data().visit_date_time._seconds * 1000),
@@ -343,7 +343,7 @@ exports.getVisitsInCertainDays = async (req, res) => {
       if (day) {
         if (dayOfWeek === getDayIndex(day)) {
           const customer = {
-            customer_id: doc.id,
+            customer_id: doc.data().customer_id,
             customer_name: doc.data().customer_name,
             time_spend_in_minutes: doc.data().time_spend_in_minutes,
             visit_date_time: visitDateTime,
@@ -360,7 +360,7 @@ exports.getVisitsInCertainDays = async (req, res) => {
           dayOfWeek <= getDayIndex(to_day)
         ) {
           const customer = {
-            customer_id: doc.id,
+            customer_id: doc.data().customer_id,
             customer_name: doc.data().customer_name,
             time_spend_in_minutes: doc.data().time_spend_in_minutes,
             visit_date_time: visitDateTime,
