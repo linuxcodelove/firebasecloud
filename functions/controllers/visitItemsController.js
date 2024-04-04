@@ -176,7 +176,7 @@ exports.getByDietaryPreference = async (req, res) => {
 
     querySnapshot.forEach((doc) => {
       const customer = {
-        customer_id: doc.id,
+        customer_id: doc.data().customer_id,
         customer_name: doc.data().customer_name,
         visits_count: doc.data().visits_count,
         time_spend_in_minutes: doc.data().time_spend_in_minutes,
