@@ -225,8 +225,8 @@ exports.visitedCustomerInCertainPeriod = async (req, res) => {
 
     if (from_date && to_date) {
       baseQuery = baseQuery
-        .where("visit_date_time", ">=", new Date(from_date))
-        .where("visit_date_time", "<=", new Date(to_date));
+        .where("visit_date_time", ">=", formatDate(from_date))
+        .where("visit_date_time", "<=", formatDate(to_date));
     }
 
     const querySnapshot = await baseQuery
@@ -258,26 +258,44 @@ exports.visitedCustomerInCertainPeriod = async (req, res) => {
 };
 
 exports.getLessVisitedCustomer = async (req, res) => {
+  const { limit = 10, visits_count: target = 1 } = req.query;
+
   try {
-    const querySnapshot = await db
-      .orderBy("time_spend_in_minutes", "asc")
-      .limit(10)
-      .get();
-
-    let lessVisitedCustomers = [];
-
+    let groupedItem = {};
+    const querySnapshot = await db.get();
     querySnapshot.forEach((doc) => {
-      const customerData = {
-        customer_id: doc.id,
-        customer_name: doc.data().customer_name,
-        visits_count: doc.data().visits_count,
-        time_spend_in_minutes: doc.data().time_spend_in_minutes,
-      };
-
-      lessVisitedCustomers.push(customerData);
+      const data = doc.data();
+      if (groupedItem.hasOwnProperty(data.customer_id))
+        groupedItem[data.customer_id].count += 1;
+      else
+        groupedItem[data.customer_id] = {
+          name: data.customer_name,
+          count: 1,
+        };
     });
 
-    return res.status(200).send(lessVisitedCustomers);
+    let filteredCustomers = [];
+    for (const item of Object.keys(groupedItem)) {
+      const count = groupedItem[item].count;
+      if (count <= Number(target)) {
+        console.log(groupedItem[item]);
+        filteredCustomers.push({
+          customer_id: item,
+          customer_name: groupedItem[item].name,
+          visits_count: count,
+        });
+      }
+    }
+
+    // Sort customers by visits_count in ascending order and set limit
+    const limitedCustomers = filteredCustomers
+      .sort((a, b) => b.visits_count - a.visits_count)
+      .slice(0, +limit);
+
+    return res.status(200).send({
+      total_customers: limitedCustomers.length,
+      customers: limitedCustomers,
+    });
   } catch (error) {
     return res.status(500).send(error);
   }
