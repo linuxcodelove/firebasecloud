@@ -121,19 +121,28 @@ exports.averageAmountSpent = async (req, res) => {
     );
 
     const querySnapshot = await query.get();
-    let totalAmount = 0;
+    const spentAmount = {};
+
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.amount_paid) {
-        totalAmount += data.amount_paid;
+      const customerId = data.customer_id;
+      if (!spentAmount[customerId]) {
+        spentAmount[customerId] = {
+          totalAmount: 0,
+          average: 0,
+          customerName: "",
+          visitCount: 0,
+        };
       }
+      spentAmount[customerId].totalAmount += data.amount_paid;
+      spentAmount[customerId].visitCount++;
+      spentAmount[customerId].average =
+        spentAmount[customerId].totalAmount /
+        spentAmount[customerId].visitCount;
+      spentAmount[customerId].customerName = data.customer_name;
     });
-
-    const average = totalAmount / querySnapshot.size;
-
     res.status(200).send({
-      totalAmountSpent: totalAmount,
-      average: average.toFixed(2),
+      data: spentAmount,
     });
   } catch (error) {
     console.log(error);
@@ -155,22 +164,29 @@ exports.averageTimeSpent = async (req, res) => {
     );
 
     const querySnapshot = await query.get();
-    let totalTimeSpent = 0;
-    let totalDocuments = 0;
+    const spentTime = {};
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.time_spend_in_minutes) {
-        totalTimeSpent += Number(data.time_spend_in_minutes);
-        totalDocuments++;
+      const customerId = data.customer_id;
+      if (!spentTime[customerId]) {
+        spentTime[customerId] = {
+          totalTimeSpentInMinutes: 0,
+          averageMinutes: 0,
+          customerName: "",
+          visitCount: 0,
+        };
       }
+      spentTime[customerId].totalTimeSpentInMinutes +=
+        data.time_spend_in_minutes;
+      spentTime[customerId].visitCount++;
+      spentTime[customerId].averageMinutes =
+        spentTime[customerId].totalTimeSpentInMinutes /
+        spentTime[customerId].visitCount;
+      spentTime[customerId].customerName = data.customer_name;
     });
 
-    const averageTimeSpent =
-      totalDocuments > 0 ? totalTimeSpent / totalDocuments : 0;
-
     res.status(200).send({
-      totalTimeSpent: totalTimeSpent,
-      averageTimeSpent: Number(averageTimeSpent.toFixed(2)),
+      data: spentTime,
     });
   } catch (error) {
     console.log(error);
