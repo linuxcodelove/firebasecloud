@@ -32,6 +32,7 @@ app.get(
   "/customersByTopVisitedLocation",
   customerDetailController.getCustomersByTopVisitedLocation
 );
+app.get("/feedback", customerDetailController.getCustomerFeedback);
 app.get("/countByGender", customerDetailController.getGenderCount);
 app.post("/", customerDetailController.uploadCustomerJson);
 app.get("/:id", customerDetailController.getCustomerDetail);

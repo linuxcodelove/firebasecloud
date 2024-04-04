@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const db = admin.firestore().collection("cust_details");
+const db = admin.firestore().collection("customer_details");
 const json = require("../data/customer_details");
 const { setPayload } = require("../helpers/customer");
 const { formatDate, formSimpleQuery } = require("../helpers/common");
@@ -56,7 +56,7 @@ exports.uploadCustomerJson = async (req, res) => {
   try {
     const promises = json.map(async (item, index) => {
       try {
-        const obj = setPayload(item, index);
+        const obj = setPayload(item, index + 1);
         await db.doc("/" + obj.id + "/").create(obj);
         return {
           success: true,
@@ -199,7 +199,7 @@ exports.getGenderCount = async (req, res) => {
     const genderCounts = {
       male: 0,
       female: 0,
-      other: 0,
+      not_specified: 0,
     };
 
     querySnapshot.forEach((doc) => {
@@ -221,27 +221,29 @@ exports.getGenderCount = async (req, res) => {
 };
 
 exports.getNotVisitedHighSpent = async (req, res) => {
-  // Convert the start date string to a Firestore Timestamp object
-  // const startDate = Timestamp.fromDate(new Date(req.query.date));
-  const startDate = formatDate(req.query.date);
-  query = db.where("last_visited_date", "<", startDate).orderBy("total_spent");
+  const obj1 = {
+    start: {
+      symbol: ">=",
+      value: Number(req.query.start) || null,
+    },
+  };
+  let query;
+  query = formSimpleQuery("total_spent", obj1, db);
 
-  try {
-    const querySnapshot = await query.get();
-    const customersList = querySnapshot.docs.map((doc) => doc.data());
-    return res.status(200).json({
-      length: customersList.length,
-      data: customersList,
-    });
-  } catch (error) {
-    console.error("Error getting documents:", error);
-    return res.status(500).json({ error: "Failed to get documents" });
-  }
+  const obj2 = {
+    fromDate: {
+      symbol: "<",
+      value: formatDate(req.query.from_date) || null,
+    },
+  };
+  query = formSimpleQuery("last_visited_date", obj2, db);
+
+  fetchData(query, res);
 };
 
 exports.getNewRepeatedCustomers = async (req, res) => {
   // we could use last created date to find new customers
-  const fieldName = "last_visited_date";
+  const fieldName = "created_at";
   const { from_date, to_date } = req.query;
 
   const obj = {
@@ -258,35 +260,49 @@ exports.getNewRepeatedCustomers = async (req, res) => {
   let query = db.orderBy("visits_count", "desc");
   query = formSimpleQuery(fieldName, obj, db);
 
-  try {
-    const querySnapshot = await query.get();
-
-    const customersList = querySnapshot.docs.map((doc) => doc.data());
-
-    return res
-      .status(200)
-      .json({ length: customersList.length, data: customersList });
-  } catch (error) {
-    console.error("Error getting documents:", error);
-    return res.status(500).json({ error: "Failed to get documents" });
-  }
+  fetchData(query, res);
 };
 
 exports.getCustomersByTopVisitedLocation = async (req, res) => {
   let query = db.orderBy("visits_count", "desc");
+  fetchData(query, res);
+};
+
+exports.getCustomerFeedback = async (req, res) => {
+  const db = admin.firestore().collection("visits");
+  let query = db;
+  const customer = req.query.customer_id;
+  if (customer) query = query.where("customer_id", "==", Number(customer));
   try {
     const querySnapshot = await query.get();
+    if (querySnapshot.empty) return res.status(200).send("No Visits Found!");
 
-    const customersList = querySnapshot.docs.map((doc) => {
-      return {
-        customer: doc.data(),
-        topVisitedLocation: doc.data().top_visited_store,
-      };
+    // Initialize variables for minimum, maximum, and total feedback
+    let minFeedback = null;
+    let maxFeedback = null;
+    let totalFeedback = null;
+    let count = 0;
+
+    // Calculate minimum, maximum, and total feedback
+    querySnapshot.forEach((doc) => {
+      const feedback = doc.data().feedback_rating;
+      if (feedback) {
+        minFeedback = minFeedback ? Math.min(minFeedback, feedback) : feedback;
+        maxFeedback = maxFeedback ? Math.max(maxFeedback, feedback) : feedback;
+        totalFeedback += feedback;
+      }
+      count++;
     });
 
+    // Calculate average feedback
+    const averageFeedback = totalFeedback ? totalFeedback / count : null;
+
+    // Return the statistics as JSON response
     return res.status(200).json({
-      length: customersList.length,
-      data: customersList,
+      minFeedback,
+      maxFeedback,
+      averageFeedback,
+      totalVisits: count,
     });
   } catch (error) {
     console.error("Error getting documents:", error);
