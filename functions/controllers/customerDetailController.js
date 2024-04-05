@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("customer_details");
-const json = require("../data/customer_details");
+const json = require("../data3/customer_details");
 const { setPayload } = require("../helpers/customer");
 const { formatDate, formSimpleQuery } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");

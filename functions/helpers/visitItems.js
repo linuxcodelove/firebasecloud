@@ -22,9 +22,11 @@ exports.setPayload = (obj, ind = null) => {
     department_name,
     department_id,
     visits,
+    id,
   } = obj;
 
   const obj2 = {
+    id,
     account_id,
     amount,
     amount_paid,
@@ -48,7 +50,7 @@ exports.setPayload = (obj, ind = null) => {
     visits,
   };
   if (ind) {
-    obj2.id = ind;
+    obj2.id = obj2.id ? obj2.id : ind;
     obj2.visits.check_closer_time =
       Timestamp.fromDate(new Date(obj2.visits.check_closer_time)) || null;
     obj2.visits.visit_date_time =
