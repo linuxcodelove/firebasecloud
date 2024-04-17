@@ -98,10 +98,7 @@ exports.getCustomerByMostVisit = async (req, res) => {
     const mostVisitedPersons = mostVisitedSnapshots.docs.map((doc) =>
       doc.data()
     );
-    return res.status(200).json({
-      length: mostVisitedPersons.length,
-      data: mostVisitedPersons,
-    });
+    return res.status(200).json(mostVisitedPersons);
   } catch (error) {
     return res.status(500).send(error);
   }
@@ -176,15 +173,12 @@ exports.getCustomerByAverageSpent = async (req, res) => {
     const querySnapshot = await query.get();
     const customersList = querySnapshot.docs.map((doc) => ({
       ...doc.data(),
-      averageSpent: parseFloat(
+      average_spent: parseFloat(
         (doc.data().total_spent / doc.data().visits_count).toFixed(2)
       ),
     }));
 
-    return res.status(200).json({
-      length: customersList.length,
-      data: customersList,
-    });
+    return res.status(200).json(customersList);
   } catch (error) {
     console.error("Error getting documents:", error);
     return res.status(500).json({ error: "Failed to get documents" });
@@ -209,7 +203,7 @@ exports.getGenderCount = async (req, res) => {
       } else if (gender === "female") {
         genderCounts.female++;
       } else {
-        genderCounts.other++;
+        genderCounts.not_specified++;
       }
     });
 
@@ -236,7 +230,9 @@ exports.getNotVisitedHighSpent = async (req, res) => {
       value: formatDate(req.query.from_date) || null,
     },
   };
+
   query = formSimpleQuery("last_visited_date", obj2, db);
+  query = query.orderBy("total_spent", "desc");
 
   fetchData(query, res);
 };
@@ -256,9 +252,9 @@ exports.getNewRepeatedCustomers = async (req, res) => {
       value: formatDate(to_date) || null,
     },
   };
-
-  let query = db.orderBy("visits_count", "desc");
+  let query;
   query = formSimpleQuery(fieldName, obj, db);
+  query = query.orderBy("visits_count", "desc");
 
   fetchData(query, res);
 };
@@ -295,7 +291,9 @@ exports.getCustomerFeedback = async (req, res) => {
     });
 
     // Calculate average feedback
-    const averageFeedback = totalFeedback ? totalFeedback / count : null;
+    const averageFeedback = totalFeedback
+      ? parseFloat(totalFeedback / count).toFixed()
+      : null;
 
     // Return the statistics as JSON response
     return res.status(200).json({
@@ -314,10 +312,7 @@ const fetchData = async (query, res) => {
   try {
     const querySnapshots = await query.get();
     const response = querySnapshots.docs.map((doc) => doc.data());
-    return res.status(200).json({
-      length: response.length,
-      data: response,
-    });
+    return res.status(200).json(response);
   } catch (error) {
     return res.status(500).send(error);
   }
