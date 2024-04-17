@@ -86,6 +86,7 @@ exports.mostVisited = async (req, res) => {
       }
       visitCounts[customerId].visitCount++;
       visitCounts[customerId].customerName = data.customer_name;
+      visitCounts[customerId].data = data;
     });
 
     let mostVisitedCustomer = null;
@@ -93,13 +94,13 @@ exports.mostVisited = async (req, res) => {
     for (const customerId in visitCounts) {
       if (visitCounts[customerId].visitCount > maxVisitCount) {
         maxVisitCount = visitCounts[customerId].visitCount;
-        mostVisitedCustomer = visitCounts[customerId].customerName;
+        mostVisitedCustomer = visitCounts[customerId].data;
       }
     }
+    mostVisitedCustomer.visitCount = maxVisitCount;
 
     res.status(200).send({
-      mostVisitedCustomer: mostVisitedCustomer,
-      maxVisitCount: maxVisitCount,
+      data: mostVisitedCustomer,
     });
   } catch (error) {
     console.log(error);
@@ -132,6 +133,7 @@ exports.averageAmountSpent = async (req, res) => {
           average: 0,
           customerName: "",
           visitCount: 0,
+          ...data,
         };
       }
       spentAmount[customerId].totalAmount += data.amount_paid;
@@ -142,7 +144,7 @@ exports.averageAmountSpent = async (req, res) => {
       spentAmount[customerId].customerName = data.customer_name;
     });
     res.status(200).send({
-      data: spentAmount,
+      data: Object.values(spentAmount),
     });
   } catch (error) {
     console.log(error);
@@ -174,6 +176,7 @@ exports.averageTimeSpent = async (req, res) => {
           averageMinutes: 0,
           customerName: "",
           visitCount: 0,
+          ...data,
         };
       }
       spentTime[customerId].totalTimeSpentInMinutes +=
@@ -186,7 +189,7 @@ exports.averageTimeSpent = async (req, res) => {
     });
 
     res.status(200).send({
-      data: spentTime,
+      data: Object.values(spentTime),
     });
   } catch (error) {
     console.log(error);
@@ -209,20 +212,11 @@ exports.getByFeedback = async (req, res) => {
     let feedbackByRatingCustomers = [];
 
     querySnapshot.forEach((doc) => {
-      const customer = {
-        customer_id: doc.data().customer_id,
-        customer_name: doc.data().customer_name,
-        visits_count: doc.data().visits_count,
-        time_spend_in_minutes: doc.data().time_spend_in_minutes,
-        feedback_rating: doc.data().feedback_rating,
-      };
-
-      feedbackByRatingCustomers.push(customer);
+      feedbackByRatingCustomers.push(doc.data());
     });
 
     return res.status(200).send({
-      "Total Customers": feedbackByRatingCustomers.length,
-      customers: feedbackByRatingCustomers,
+      data: feedbackByRatingCustomers,
     });
   } catch (error) {
     return res.status(500).send(error);
@@ -253,20 +247,11 @@ exports.visitedCustomerInCertainPeriod = async (req, res) => {
     let sortedCustomers = [];
 
     querySnapshot.forEach((doc) => {
-      const customer = {
-        customer_id: doc.data().customer_id,
-        customer_name: doc.data().customer_name,
-        time_spend_in_minutes: doc.data().time_spend_in_minutes,
-        visit_date_time: new Date(doc.data().visit_date_time._seconds * 1000),
-        store_visited: doc.data().store_visited,
-      };
-
-      sortedCustomers.push(customer);
+      sortedCustomers.push(doc.data());
     });
 
     return res.status(200).send({
-      "Total Customers": sortedCustomers.length,
-      customers: sortedCustomers,
+      data: sortedCustomers,
     });
   } catch (error) {
     return res.status(500).send(error);
@@ -279,38 +264,74 @@ exports.getLessVisitedCustomer = async (req, res) => {
   try {
     let groupedItem = {};
     const querySnapshot = await db.get();
+    // querySnapshot.forEach((doc) => {
+    //   const data = doc.data();
+    //   if (groupedItem.hasOwnProperty(data.customer_id))
+    //     groupedItem[data.customer_id].count += 1;
+    //   else
+    //     groupedItem[data.customer_id] = {
+    //       name: data.customer_name,
+    //       count: 1,
+    //     };
+    // });
+
+    // let filteredCustomers = [];
+    // for (const item of Object.keys(groupedItem)) {
+    //   const count = groupedItem[item].count;
+    //   if (count <= Number(target)) {
+    //     console.log(groupedItem[item]);
+    //     filteredCustomers.push({
+    //       customer_id: item,
+    //       customer_name: groupedItem[item].name,
+    //       visits_count: count,
+    //     });
+    //   }
+    // }
+
+    const visitCounts = {};
+    const targetVisitsCount = target ? target : 1;
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      if (groupedItem.hasOwnProperty(data.customer_id))
-        groupedItem[data.customer_id].count += 1;
-      else
-        groupedItem[data.customer_id] = {
-          name: data.customer_name,
-          count: 1,
-        };
+      const customerId = doc.data().customer_id;
+      visitCounts[customerId] = visitCounts[customerId] || { visitsCount: 0 };
+      visitCounts[customerId].visitsCount++;
+      visitCounts[customerId].customer_name = doc.data().customer_name;
+      visitCounts[customerId].mobile_number = doc.data().mobile_number;
+      visitCounts[customerId].service_type = doc.data().service_type;
+      visitCounts[customerId].store_visited = doc.data().store_visited;
+      visitCounts[customerId].visit_date_time = doc.data().visit_date_time;
+      visitCounts[customerId].feedback_rating = doc.data().feedback_rating;
+      visitCounts[customerId].time_spend_in_minutes =
+        doc.data().time_spend_in_minutes;
     });
 
-    let filteredCustomers = [];
-    for (const item of Object.keys(groupedItem)) {
-      const count = groupedItem[item].count;
-      if (count <= Number(target)) {
-        console.log(groupedItem[item]);
-        filteredCustomers.push({
-          customer_id: item,
-          customer_name: groupedItem[item].name,
-          visits_count: count,
-        });
-      }
-    }
+    // Count the occurrences of each customer and store the entire doc.data() object
+    const filteredCustomers = Object.entries(visitCounts)
+      .filter(([customerId, data]) => {
+        console.log(customerId);
+        if (targetVisitsCount === null) {
+          return true; // Include all customers if no visits_count is provided
+        }
+        return data.visitsCount <= targetVisitsCount;
+      })
+      .map(([customerId, data]) => ({
+        customer_id: customerId,
+        customer_name: data.customer_name,
+        mobile_number: data.mobile_number,
+        service_type: data.service_type,
+        store_visited: data.store_visited,
+        visit_date_time: data.visit_date_time,
+        feedback_rating: data.feedback_rating,
+        time_spend_in_minutes: data.time_spend_in_minutes,
+        visitCount: data.visitsCount,
+      }));
 
     // Sort customers by visits_count in ascending order and set limit
     const limitedCustomers = filteredCustomers
-      .sort((a, b) => b.visits_count - a.visits_count)
+      .sort((a, b) => b.visitCount - a.visitCount)
       .slice(0, +limit);
 
     return res.status(200).send({
-      total_customers: limitedCustomers.length,
-      customers: limitedCustomers,
+      data: limitedCustomers,
     });
   } catch (error) {
     return res.status(500).send(error);
@@ -342,15 +363,7 @@ exports.getVisitsInCertainDays = async (req, res) => {
 
       if (day) {
         if (dayOfWeek === getDayIndex(day)) {
-          const customer = {
-            customer_id: doc.data().customer_id,
-            customer_name: doc.data().customer_name,
-            time_spend_in_minutes: doc.data().time_spend_in_minutes,
-            visit_date_time: visitDateTime,
-            store_visited: doc.data().store_visited,
-          };
-
-          sortedCustomers.push(customer);
+          sortedCustomers.push(doc.data());
         }
       } else {
         if (
@@ -359,25 +372,68 @@ exports.getVisitsInCertainDays = async (req, res) => {
           dayOfWeek >= getDayIndex(from_day) &&
           dayOfWeek <= getDayIndex(to_day)
         ) {
-          const customer = {
-            customer_id: doc.data().customer_id,
-            customer_name: doc.data().customer_name,
-            time_spend_in_minutes: doc.data().time_spend_in_minutes,
-            visit_date_time: visitDateTime,
-            store_visited: doc.data().store_visited,
-          };
-
-          sortedCustomers.push(customer);
+          sortedCustomers.push(doc.data());
         }
       }
     });
 
     return res.status(200).send({
-      "Total Customers": sortedCustomers.length,
-      customers: sortedCustomers,
+      data: sortedCustomers,
     });
   } catch (error) {
     return res.status(500).send(error);
+  }
+};
+
+exports.getVisitsInCertainDaysFiltered = async (req, res) => {
+  const { day } = req.query;
+
+  try {
+    let baseQuery = db;
+
+    const querySnapshot = await baseQuery.get();
+
+    const totalCustomers = [];
+    const selectedDay = day.toLowerCase(); // Convert to lowercase for case-insensitive comparison
+
+    querySnapshot.forEach((doc) => {
+      const visitDateTime = new Date(doc.data().visit_date_time.seconds * 1000);
+      const dayOfWeek = visitDateTime.getDay();
+
+      if (selectedDay && dayOfWeek === getDayIndex(selectedDay)) {
+        // Check if the customer visited only on the selected day
+        const customerId = doc.data().customer_id;
+        let otherDaysVisited = false;
+
+        // Iterate over all documents except the current one
+        querySnapshot.forEach((otherDoc) => {
+          if (
+            otherDoc.id !== doc.id &&
+            otherDoc.data().customer_id === customerId
+          ) {
+            const otherVisitDateTime = new Date(
+              otherDoc.data().visit_date_time.seconds * 1000
+            );
+            if (otherVisitDateTime.getDay() !== dayOfWeek) {
+              otherDaysVisited = true;
+            }
+          }
+        });
+
+        if (!otherDaysVisited) {
+          totalCustomers.push(doc.data());
+        }
+      }
+    });
+
+    console.log(totalCustomers);
+
+    return res.status(200).send({
+      data: totalCustomers,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).send("Internal Server Error");
   }
 };
 

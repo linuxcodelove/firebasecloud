@@ -17,6 +17,7 @@ app.get(
 );
 
 app.get("/visitsInCertainDays", visitsController.getVisitsInCertainDays);
+app.get("/visitsInParticularDays", visitsController.getVisitsInCertainDaysFiltered);
 
 app.get("/", visitsController.getAllVisits);
 
