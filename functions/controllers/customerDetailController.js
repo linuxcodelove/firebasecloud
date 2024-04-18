@@ -16,28 +16,20 @@ exports.getAllCustomerDetail = async (req, res) => {
       };
       response.push(item);
     });
-    return res.status(200).send({
-      length: response.length,
-      data: response,
-    });
+    return res.status(200).json(response);
   } catch (error) {
-    console.error("Error fetching all products", error);
-    return res
-      .status(500)
-      .send("An error occurred while Fetching all products");
+    return res.status(500).send(error);
   }
 };
 
 exports.createCustomerDetail = async (req, res) => {
   try {
     const obj = setPayload(req.body);
-    await db.doc("/" + req.body.id + "/").create(obj);
-    res.status(200).send("Done");
+    const customerDetail = await db.doc("/" + req.body.id + "/").create(obj);
+    let response = customerDetail.data();
+    res.status(200).json(response);
   } catch (error) {
-    console.error("Error customer details:", error);
-    res
-      .status(500)
-      .send("An error occurred while creating the customer details");
+    res.status(500).send(error);
   }
 };
 
@@ -47,8 +39,7 @@ exports.getCustomerDetail = async (req, res) => {
     let response = customerDetail.data();
     return res.status(200).send(response);
   } catch (error) {
-    console.error("Error Fetching Customer detail:", error);
-    return res.status(500).send("An error occurred while Customer detail");
+    return res.status(500).send(error);
   }
 };
 
@@ -63,8 +54,6 @@ exports.uploadCustomerJson = async (req, res) => {
           message: `Document with id ${obj.id} created successfully`,
         };
       } catch (error) {
-        // If an error occurs during document creation
-        console.error(`Error creating document for item:`, item, error);
         return {
           success: false,
           message: `Error creating document for item: ${item}`,
@@ -76,13 +65,7 @@ exports.uploadCustomerJson = async (req, res) => {
     const responses = await Promise.all(promises);
     return res.status(200).json(responses);
   } catch (error) {
-    // If an error occurs during the mapping or Promise.all
-    console.error("Error uploading customer JSON:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error uploading customer JSON",
-      error: error.message,
-    });
+    return res.status(500).send(error);
   }
 };
 
@@ -90,7 +73,8 @@ exports.getCustomerByMostVisit = async (req, res) => {
   try {
     const query = db.orderBy("visits_count", "desc").limit(1);
     const snapshot = await query.get();
-    if (snapshot.empty) return res.status(200).send("No Visits Found!");
+    if (snapshot.empty)
+      return res.status(500).send({ message: "No customers Found!" });
     const maxCount = snapshot.docs[0].data().visits_count;
     const mostVisitedSnapshots = await db
       .where("visits_count", "==", maxCount)
@@ -180,8 +164,7 @@ exports.getCustomerByAverageSpent = async (req, res) => {
 
     return res.status(200).json(customersList);
   } catch (error) {
-    console.error("Error getting documents:", error);
-    return res.status(500).json({ error: "Failed to get documents" });
+    return res.status(500).send(error);
   }
 };
 
@@ -209,8 +192,7 @@ exports.getGenderCount = async (req, res) => {
 
     return res.status(200).json(genderCounts);
   } catch (error) {
-    console.error("Error getting documents:", error);
-    return res.status(500).json({ error: "Failed to get documents" });
+    return res.status(500).send(error);
   }
 };
 
@@ -271,7 +253,10 @@ exports.getCustomerFeedback = async (req, res) => {
   if (customer) query = query.where("customer_id", "==", Number(customer));
   try {
     const querySnapshot = await query.get();
-    if (querySnapshot.empty) return res.status(200).send("No Visits Found!");
+    if (querySnapshot.empty)
+      return res
+        .status(500)
+        .send({ message: "No feedback was given by the customer." });
 
     // Initialize variables for minimum, maximum, and total feedback
     let minFeedback = null;
@@ -303,8 +288,7 @@ exports.getCustomerFeedback = async (req, res) => {
       totalVisits: count,
     });
   } catch (error) {
-    console.error("Error getting documents:", error);
-    return res.status(500).json({ error: "Failed to get documents" });
+    return res.status(500).send(error);
   }
 };
 

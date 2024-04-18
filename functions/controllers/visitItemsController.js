@@ -15,15 +15,9 @@ exports.getAllVisitItems = async (req, res) => {
       };
       response.push(item);
     });
-    return res.status(200).send({
-      length: response.length,
-      data: response,
-    });
+    return res.status(200).send(response);
   } catch (error) {
-    console.error("Error fetching all products", error);
-    return res
-      .status(500)
-      .send("An error occurred while Fetching all products");
+    return res.status(500).send(error);
   }
 };
 
@@ -38,8 +32,6 @@ exports.uploadVisitItemsJson = async (req, res) => {
           message: `Document with id ${obj.id} created successfully`,
         };
       } catch (error) {
-        // If an error occurs during document creation
-        console.error(`Error creating document for item:`, item, error);
         return {
           success: false,
           message: `Error creating document for item: ${item}`,
@@ -51,13 +43,7 @@ exports.uploadVisitItemsJson = async (req, res) => {
     const responses = await Promise.all(promises);
     return res.status(200).json(responses);
   } catch (error) {
-    // If an error occurs during the mapping or Promise.all
-    console.error("Error uploading customer JSON:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error uploading customer JSON",
-      error: error.message,
-    });
+    return res.status(500).send(error);
   }
 };
 
@@ -95,15 +81,20 @@ exports.getMostOrderedItems = async (req, res) => {
     let result;
 
     result = findMostFrequentItems(groupedItem, count);
-    console.log(result);
 
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error fetching all products", error);
-    return res
-      .status(500)
-      .send("An error occurred while Fetching all products");
+    return res.status(500).send(error);
   }
+};
+
+const findMostFrequentItems = (obj, n) => {
+  let mostFrequentItemId = [];
+  for (const itemId in obj) {
+    const count = obj[itemId].quantity;
+    if (count > Number(n)) mostFrequentItemId.push(obj[itemId]);
+  }
+  return mostFrequentItemId;
 };
 
 exports.getOrdersBySpecialOffers = async (req, res) => {
@@ -120,10 +111,7 @@ exports.getOrdersBySpecialOffers = async (req, res) => {
     });
     return res.status(200).json(itemList);
   } catch (error) {
-    console.error("Error fetching Orders based on special offers", error);
-    return res
-      .status(500)
-      .send("An error occurred while Fetching orders based on special offers");
+    return res.status(500).send(error);
   }
 };
 
@@ -142,10 +130,7 @@ exports.getOrdersByPrice = async (req, res) => {
     });
     return res.status(200).json(itemList);
   } catch (error) {
-    console.error("Error fetching Orders based on price range", error);
-    return res
-      .status(500)
-      .send("An error occurred while Fetching orders based on price range");
+    return res.status(500).send(error);
   }
 };
 
@@ -191,15 +176,6 @@ exports.getSeasonalItems = async (req, res) => {
   } catch (error) {
     return res.status(500).send(error);
   }
-};
-
-const findMostFrequentItems = (obj, n) => {
-  let mostFrequentItemId = [];
-  for (const itemId in obj) {
-    const count = obj[itemId].count;
-    if (count > Number(n)) mostFrequentItemId.push(obj[itemId]);
-  }
-  return mostFrequentItemId;
 };
 
 // const findMostFrequent = (obj) => {

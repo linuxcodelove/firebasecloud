@@ -18,6 +18,23 @@ const productRoutes = require("./routes/product.js");
 const visitItemRoutes = require("./routes/visitItems.js");
 const visitRoutes = require("./routes/visits.js");
 
+app.use((req, res, next) => {
+  const authToken = req.headers.authorization;
+  if (!authToken) return res.status(401).send("Unauthorized");
+  const token = authToken?.split("Bearer ")[1];
+  admin
+    .auth()
+    .verifyIdToken(token)
+    .then(() => {
+      console.log("success");
+      next();
+    })
+    .catch(() => {
+      console.log("error");
+      return res.status(401).send("Unauthorized");
+    });
+});
+
 app.use("/products", productRoutes);
 app.use("/customer_details", customerDetailRoutes);
 app.use("/visit_items", visitItemRoutes);
