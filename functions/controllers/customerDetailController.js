@@ -73,8 +73,7 @@ exports.getCustomerByMostVisit = async (req, res) => {
   try {
     const query = db.orderBy("visits_count", "desc").limit(1);
     const snapshot = await query.get();
-    if (snapshot.empty)
-      return res.status(500).send({ message: "No customers Found!" });
+    if (snapshot.empty) return res.status(200).send([]);
     const maxCount = snapshot.docs[0].data().visits_count;
     const mostVisitedSnapshots = await db
       .where("visits_count", "==", maxCount)
@@ -176,7 +175,7 @@ exports.getGenderCount = async (req, res) => {
     const genderCounts = {
       male: 0,
       female: 0,
-      not_specified: 0,
+      notSpecified: 0,
     };
 
     querySnapshot.forEach((doc) => {
@@ -186,7 +185,7 @@ exports.getGenderCount = async (req, res) => {
       } else if (gender === "female") {
         genderCounts.female++;
       } else {
-        genderCounts.not_specified++;
+        genderCounts.notSpecified++;
       }
     });
 
@@ -253,14 +252,11 @@ exports.getCustomerFeedback = async (req, res) => {
   if (customer) query = query.where("customer_id", "==", Number(customer));
   try {
     const querySnapshot = await query.get();
-    if (querySnapshot.empty)
-      return res
-        .status(500)
-        .send({ message: "No feedback was given by the customer." });
+    if (querySnapshot.empty) return res.status(200).send({});
 
     // Initialize variables for minimum, maximum, and total feedback
-    let minFeedback = null;
-    let maxFeedback = null;
+    let minimumFeedback = null;
+    let maximumFeedback = null;
     let totalFeedback = null;
     let count = 0;
 
@@ -268,8 +264,8 @@ exports.getCustomerFeedback = async (req, res) => {
     querySnapshot.forEach((doc) => {
       const feedback = doc.data().feedback_rating;
       if (feedback) {
-        minFeedback = minFeedback ? Math.min(minFeedback, feedback) : feedback;
-        maxFeedback = maxFeedback ? Math.max(maxFeedback, feedback) : feedback;
+        minimumFeedback = minimumFeedback ? Math.min(minimumFeedback, feedback) : feedback;
+        maximumFeedback = maximumFeedback ? Math.max(maximumFeedback, feedback) : feedback;
         totalFeedback += feedback;
       }
       count++;
@@ -277,13 +273,13 @@ exports.getCustomerFeedback = async (req, res) => {
 
     // Calculate average feedback
     const averageFeedback = totalFeedback
-      ? parseFloat(totalFeedback / count).toFixed()
+      ? parseFloat(totalFeedback / count).toFixed(1)
       : null;
 
     // Return the statistics as JSON response
     return res.status(200).json({
-      minFeedback,
-      maxFeedback,
+      minimumFeedback,
+      maximumFeedback,
       averageFeedback,
       totalVisits: count,
     });

@@ -75,6 +75,7 @@ exports.getMostOrderedItems = async (req, res) => {
         groupedItem[data.item_id] = {
           ...data,
           quantity: 1,
+          item_price_in_rupees: parseFloat(data.item_price / 100).toFixed(2),
         };
     });
 
@@ -107,7 +108,10 @@ exports.getOrdersBySpecialOffers = async (req, res) => {
     const snapshots = await query.get();
     snapshots.forEach((doc) => {
       const data = doc.data();
-      itemList.push(data);
+      itemList.push({
+        ...data,
+        item_price_in_rupees: parseFloat(data.item_price / 100).toFixed(2),
+      });
     });
     return res.status(200).json(itemList);
   } catch (error) {
@@ -126,7 +130,10 @@ exports.getOrdersByPrice = async (req, res) => {
     const snapshots = await query.get();
     snapshots.forEach((doc) => {
       const data = doc.data();
-      itemList.push(data);
+      itemList.push({
+        ...data,
+        item_price_in_rupees: parseFloat(data.item_price / 100).toFixed(2),
+      });
     });
     return res.status(200).json(itemList);
   } catch (error) {
@@ -147,7 +154,10 @@ exports.getByDietaryPreference = async (req, res) => {
 
     snapshots.forEach((doc) => {
       const data = doc.data();
-      itemList.push(data);
+      itemList.push({
+        ...data,
+        item_price_in_rupees: parseFloat(data.item_price / 100).toFixed(2),
+      });
     });
 
     return res.status(200).json(itemList);
@@ -169,7 +179,10 @@ exports.getSeasonalItems = async (req, res) => {
 
     snapshots.forEach((doc) => {
       const data = doc.data();
-      itemList.push(data);
+      itemList.push({
+        ...data,
+        item_price_in_rupees: parseFloat(data.item_price / 100).toFixed(2),
+      });
     });
 
     return res.status(200).json(itemList);
