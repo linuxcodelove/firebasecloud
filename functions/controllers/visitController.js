@@ -139,8 +139,8 @@ exports.averageAmountSpent = async (req, res) => {
       spentAmount[customerId].totalAmount += data.amount_paid;
       spentAmount[customerId].visitCount++;
       spentAmount[customerId].average =
-        spentAmount[customerId].totalAmount /
-        spentAmount[customerId].visitCount;
+        (spentAmount[customerId].totalAmount /
+        spentAmount[customerId].visitCount).toFixed(2);
       spentAmount[customerId].customerName = data.customer_name;
     });
     res.status(200).send({
@@ -183,8 +183,8 @@ exports.averageTimeSpent = async (req, res) => {
         data.time_spend_in_minutes;
       spentTime[customerId].visitCount++;
       spentTime[customerId].averageMinutes =
-        spentTime[customerId].totalTimeSpentInMinutes /
-        spentTime[customerId].visitCount;
+        (spentTime[customerId].totalTimeSpentInMinutes /
+        spentTime[customerId].visitCount).toFixed(2);
       spentTime[customerId].customerName = data.customer_name;
     });
 
