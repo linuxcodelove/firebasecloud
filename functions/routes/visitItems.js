@@ -9,6 +9,7 @@ app.get("/most_ordered", visitItemsController.getMostOrderedItems);
 app.get("/special_offers", visitItemsController.getOrdersBySpecialOffers);
 app.get("/orders_by_price", visitItemsController.getOrdersByPrice);
 app.get("/dietary_preference", visitItemsController.getByDietaryPreference);
+app.get("/seasonal", visitItemsController.getSeasonalItems);
 
 app.post("/", visitItemsController.uploadVisitItemsJson);
 

@@ -84,26 +84,20 @@ exports.getMostOrderedItems = async (req, res) => {
       const data = doc.data();
       itemList.push(data);
       if (groupedItem.hasOwnProperty(data.item_id))
-        groupedItem[data.item_id].count += 1;
+        groupedItem[data.item_id].quantity += 1;
       else
         groupedItem[data.item_id] = {
-          data: data,
-          count: 1,
+          ...data,
+          quantity: 1,
         };
     });
 
-    let mostFrequentItemId;
+    let result;
 
-    mostFrequentItemId = findMostFrequentItems(groupedItem, count);
-    const result = mostFrequentItemId.map((item) => ({
-      id: item.data.id,
-      item_name: item.data.item_name,
-      count: item.count,
-    }));
-    res.status(200).json({
-      length: result.length,
-      result,
-    });
+    result = findMostFrequentItems(groupedItem, count);
+    console.log(result);
+
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error fetching all products", error);
     return res
@@ -117,18 +111,14 @@ exports.getOrdersBySpecialOffers = async (req, res) => {
   try {
     let query = db;
     const itemList = [];
-    if (sp_offer)
-      query = query.where("special_offer", "==", sp_offer.toLowerCase());
+    if (sp_offer) query = query.where("special_offer", "==", sp_offer);
 
     const snapshots = await query.get();
     snapshots.forEach((doc) => {
       const data = doc.data();
-      itemList.push(data.visits);
+      itemList.push(data);
     });
-    return res.status(200).json({
-      length: itemList.length,
-      itemList,
-    });
+    return res.status(200).json(itemList);
   } catch (error) {
     console.error("Error fetching Orders based on special offers", error);
     return res
@@ -142,18 +132,15 @@ exports.getOrdersByPrice = async (req, res) => {
   try {
     let query = db;
     const itemList = [];
-    if (min) query = query.where("visits.amount", ">=", Number(min));
-    if (max) query = query.where("visits.amount", "<=", Number(max));
+    if (min) query = query.where("item_price", ">=", Number(min));
+    if (max) query = query.where("item_price", "<=", Number(max));
 
     const snapshots = await query.get();
     snapshots.forEach((doc) => {
       const data = doc.data();
-      itemList.push(data.visits);
+      itemList.push(data);
     });
-    return res.status(200).json({
-      length: itemList.length,
-      itemList,
-    });
+    return res.status(200).json(itemList);
   } catch (error) {
     console.error("Error fetching Orders based on price range", error);
     return res
@@ -163,33 +150,44 @@ exports.getOrdersByPrice = async (req, res) => {
 };
 
 exports.getByDietaryPreference = async (req, res) => {
-  const { food_type, limit = 10 } = req.query;
+  const { food_type } = req.query;
 
   try {
-    let baseQuery = db;
+    let query = db;
+    const itemList = [];
     if (food_type) {
-      baseQuery = baseQuery.where("veg_or_non_veg", "==", food_type);
+      query = query.where("veg_or_non_veg", "==", food_type);
     }
-    const querySnapshot = await baseQuery.limit(+limit).get();
+    const snapshots = await query.get();
 
-    let dietary_customers = [];
-
-    querySnapshot.forEach((doc) => {
-      const customer = {
-        customer_id: doc.data().customer_id,
-        customer_name: doc.data().customer_name,
-        visits_count: doc.data().visits_count,
-        time_spend_in_minutes: doc.data().time_spend_in_minutes,
-        veg_or_non_veg: doc.data().veg_or_non_veg,
-      };
-
-      dietary_customers.push(customer);
+    snapshots.forEach((doc) => {
+      const data = doc.data();
+      itemList.push(data);
     });
 
-    return res.status(200).send({
-      "Total Customers": dietary_customers.length,
-      customers: dietary_customers,
+    return res.status(200).json(itemList);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+};
+
+exports.getSeasonalItems = async (req, res) => {
+  const { seasonal } = req.query;
+
+  try {
+    let query = db;
+    const itemList = [];
+    if (seasonal) {
+      query = query.where("seasonal", "==", seasonal);
+    }
+    const snapshots = await query.get();
+
+    snapshots.forEach((doc) => {
+      const data = doc.data();
+      itemList.push(data);
     });
+
+    return res.status(200).json(itemList);
   } catch (error) {
     return res.status(500).send(error);
   }
