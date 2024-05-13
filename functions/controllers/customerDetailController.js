@@ -264,8 +264,12 @@ exports.getCustomerFeedback = async (req, res) => {
     querySnapshot.forEach((doc) => {
       const feedback = doc.data().feedback_rating;
       if (feedback) {
-        minimumFeedback = minimumFeedback ? Math.min(minimumFeedback, feedback) : feedback;
-        maximumFeedback = maximumFeedback ? Math.max(maximumFeedback, feedback) : feedback;
+        minimumFeedback = minimumFeedback
+          ? Math.min(minimumFeedback, feedback)
+          : feedback;
+        maximumFeedback = maximumFeedback
+          ? Math.max(maximumFeedback, feedback)
+          : feedback;
         totalFeedback += feedback;
       }
       count++;
@@ -283,6 +287,19 @@ exports.getCustomerFeedback = async (req, res) => {
       averageFeedback,
       totalVisits: count,
     });
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+};
+
+exports.getCustomerByMobile = async (req, res) => {
+  let query = db;
+  const mobile_number = req.query.mobile_number;
+  if (!mobile_number)  return res.status(404).send("Mobile number is required");
+
+ query = query.where("mobile_number", "==", mobile_number);
+  try {
+    fetchData(query, res);
   } catch (error) {
     return res.status(500).send(error);
   }
