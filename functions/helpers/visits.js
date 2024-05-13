@@ -19,6 +19,7 @@ exports.setPayload = (obj, ind = null) => {
     service_type,
     bill_number,
     sale_id,
+    loyalty_point,
     id,
   } = obj;
 
@@ -41,6 +42,7 @@ exports.setPayload = (obj, ind = null) => {
     service_type,
     bill_number,
     sale_id,
+    loyalty_point,
     id,
   };
   if (ind) {

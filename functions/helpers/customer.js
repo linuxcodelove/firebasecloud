@@ -23,6 +23,7 @@ exports.setPayload = (obj, ind = null) => {
     total_spent,
     visits_count,
     whatsapp_number,
+    total_loyalty_points,
     created_at,
   } = obj;
 
@@ -48,6 +49,7 @@ exports.setPayload = (obj, ind = null) => {
     total_spent,
     visits_count,
     whatsapp_number,
+    total_loyalty_points,
     created_at
   };
   if (ind) {
