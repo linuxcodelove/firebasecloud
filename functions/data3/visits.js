@@ -22,6 +22,7 @@ const visits = [
     service_type: "Table",
     bill_number: 87754,
     sale_id: 7121912,
+    loyalty_point: 790
   },
   {
     id: 1118,
@@ -46,6 +47,7 @@ const visits = [
     service_type: "Table",
     bill_number: 75842,
     sale_id: 6058716,
+    loyalty_point: 2180
   },
   {
     id: 1701,
@@ -70,6 +72,7 @@ const visits = [
     service_type: "Table",
     bill_number: 76631,
     sale_id: 6133312,
+    loyalty_point: 3085
   },
   {
     id: 3144,
@@ -94,6 +97,7 @@ const visits = [
     service_type: "Table",
     bill_number: 78482,
     sale_id: 6307944,
+    loyalty_point: 2810
   },
   {
     id: 3679,
@@ -118,6 +122,7 @@ const visits = [
     service_type: "Table",
     bill_number: 79170,
     sale_id: 6369675,
+    loyalty_point: 3100
   },
   {
     id: 4084,
@@ -142,6 +147,7 @@ const visits = [
     service_type: "Table",
     bill_number: 79678,
     sale_id: 6415458,
+    loyalty_point: 1485
   },
   {
     id: 4783,
@@ -166,6 +172,7 @@ const visits = [
     service_type: "Table",
     bill_number: 80547,
     sale_id: 6508937,
+    loyalty_point: 3539
   },
   {
     id: 5589,
@@ -190,6 +197,7 @@ const visits = [
     service_type: "Table",
     bill_number: 81430,
     sale_id: 6588870,
+    loyalty_point: 1145
   },
   {
     id: 6478,
@@ -214,6 +222,7 @@ const visits = [
     service_type: "Table",
     bill_number: 82738,
     sale_id: 6710177,
+    loyalty_point: 2475
   },
   {
     id: 7042,
@@ -238,6 +247,7 @@ const visits = [
     service_type: "Table",
     bill_number: 83893,
     sale_id: 6781444,
+    loyalty_point: 2970
   },
   {
     id: 7488,
@@ -262,6 +272,7 @@ const visits = [
     service_type: "Table",
     bill_number: 84535,
     sale_id: 6833205,
+    loyalty_point: 1835
   },
   {
     id: 8502,
@@ -286,6 +297,7 @@ const visits = [
     service_type: "Table",
     bill_number: 85860,
     sale_id: 6945611,
+    loyalty_point: 3939
   },
   {
     id: 8730,
@@ -310,6 +322,7 @@ const visits = [
     service_type: "Table",
     bill_number: 86151,
     sale_id: 6975757,
+    loyalty_point: 2070
   },
   {
     id: 3669,
@@ -334,6 +347,7 @@ const visits = [
     service_type: "Table",
     bill_number: 79160,
     sale_id: 6368402,
+    loyalty_point: 665
   },
   {
     id: 5502,
@@ -358,6 +372,7 @@ const visits = [
     service_type: "Table",
     bill_number: 81464,
     sale_id: 6592536,
+    loyalty_point: 990
   },
   {
     id: 7105,
@@ -382,6 +397,7 @@ const visits = [
     service_type: "Table",
     bill_number: 84037,
     sale_id: 6787614,
+    loyalty_point: 955
   },
   {
     id: 7543,
@@ -406,6 +422,7 @@ const visits = [
     service_type: "Table",
     bill_number: 84617,
     sale_id: 6841626,
+    loyalty_point: 415
   },
   {
     id: 11022,
@@ -430,6 +447,7 @@ const visits = [
     service_type: "Table",
     bill_number: 35505,
     sale_id: 6162430,
+    loyalty_point: 790
   },
 ];
 

@@ -28,6 +28,7 @@ const customerData = [
     total_spent: 330500,
     visits_count: 3,
     whatsapp_number: "8050883862",
+    total_loyalty_points: 4005
   },
   {
     account_id: 32,
@@ -58,6 +59,7 @@ const customerData = [
     total_spent: 542400,
     visits_count: 2,
     whatsapp_number: "7259827204",
+    total_loyalty_points: 5424
   },
   {
     account_id: 32,
@@ -88,6 +90,7 @@ const customerData = [
     total_spent: 499000,
     visits_count: 2,
     whatsapp_number: "9845572852",
+    total_loyalty_points: 4990
   },
   {
     account_id: 32,
@@ -118,6 +121,7 @@ const customerData = [
     total_spent: 537400,
     visits_count: 2,
     whatsapp_number: "9972946803",
+    total_loyalty_points: 5374
   },
   {
     account_id: 32,
@@ -148,6 +152,7 @@ const customerData = [
     total_spent: 1163000,
     visits_count: 4,
     whatsapp_number: "9964304000",
+    total_loyalty_points: 11630
   },
   {
     account_id: 32,
@@ -178,6 +183,7 @@ const customerData = [
     total_spent: 66500,
     visits_count: 1,
     whatsapp_number: "9035499587",
+    total_loyalty_points: 665
   },
   {
     account_id: 32,
@@ -208,6 +214,7 @@ const customerData = [
     total_spent: 99000,
     visits_count: 1,
     whatsapp_number: "9163120036",
+    total_loyalty_points: 990
   },
   {
     account_id: 32,
@@ -238,6 +245,7 @@ const customerData = [
     total_spent: 95500,
     visits_count: 1,
     whatsapp_number: "9620162538",
+    total_loyalty_points: 955
   },
   {
     account_id: 32,
@@ -268,6 +276,7 @@ const customerData = [
     total_spent: 41500,
     visits_count: 1,
     whatsapp_number: "9901242334",
+    total_loyalty_points: 415
   },
   {
     account_id: 32,
@@ -298,6 +307,7 @@ const customerData = [
     total_spent: 79000,
     visits_count: 1,
     whatsapp_number: "9344434442",
+    total_loyalty_points: 790
   },
 ];
 
