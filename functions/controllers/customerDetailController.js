@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("customer_details");
-const json = require("../data3/customer_details");
+const json = require("../data4/customer_details");
 const { setCustomerPayload } = require("../helpers/customer");
 const { formatDate, formSimpleQuery } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");
@@ -45,10 +45,16 @@ exports.getCustomerDetail = async (req, res) => {
 
 exports.uploadCustomerJson = async (req, res) => {
   try {
-    const promises = json.map(async (item, index) => {
+    const promises = json.map(async (item) => {
       try {
-        const obj = setCustomerPayload(item, index + 1);
-        await db.doc("/" + obj.id + "/").create(obj);
+        const obj = setCustomerPayload(item);
+        // await db.doc("/" + obj.id + "/").create(obj);
+        await db.add(obj).then((docRef) => {
+          return db.doc(docRef.id).update({
+            ...obj,
+            id: docRef.id, // Include the ID in the document
+          });
+        });
         return {
           success: true,
           message: `Document with id ${obj.id} created successfully`,

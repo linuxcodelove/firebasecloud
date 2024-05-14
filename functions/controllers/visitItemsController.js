@@ -23,10 +23,16 @@ exports.getAllVisitItems = async (req, res) => {
 
 exports.uploadVisitItemsJson = async (req, res) => {
   try {
-    const promises = json.map(async (item, index) => {
+    const promises = json.map(async (item) => {
       try {
-        const obj = setVisitItemPayload(item, index + 1);
-        await db.doc("/" + obj.id + "/").create(obj);
+        const obj = setVisitItemPayload(item);
+        // await db.doc("/" + obj.id + "/").create(obj);
+        await db.add(obj).then((docRef) => {
+          return db.doc(docRef.id).update({
+            ...obj,
+            id: docRef.id, // Include the ID in the document
+          });
+        });
         return {
           success: true,
           message: `Document with id ${obj.id} created successfully`,

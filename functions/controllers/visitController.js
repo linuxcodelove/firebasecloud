@@ -2,7 +2,7 @@ const admin = require("firebase-admin");
 const db = admin.firestore().collection("visits");
 const customerDb = admin.firestore().collection("customer_details");
 const visitItemsdb = admin.firestore().collection("visit_items");
-const json = require("../data3/visits");
+const json = require("../data4/visits");
 const { setPayload } = require("../helpers/visits");
 const { setCustomerPayload } = require("../helpers/customer");
 const { setVisitItemPayload } = require("../helpers/visitItems");
@@ -10,28 +10,61 @@ const { formatDate } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");
 
 exports.createVisit = async (req, res) => {
-  const { visit, customer, visit_items } = req.body;
   try {
-    const visitObj = setPayload(visit);
-    db.add(visitObj);
-    insertVisitItems(visit_items);
+    const { visit, customer, visit_items } = req.body;
     let query = customerDb;
     const mobile_number = customer.mobile_number;
     query = query.where("mobile_number", "==", mobile_number);
     const querySnapshots = await query.get();
+    const visitObj = setPayload(visit);
 
+    let customerId;
     if (querySnapshots.empty) {
-      insertCustomer(customer);
+      customerId = await insertCustomer(customer);
     } else {
       const data = querySnapshots.docs[0].data();
-      updateCustomer(data, visitObj);
+      customerId = data.id;
+      await updateCustomer(data, visitObj);
     }
+    const docRef = await db.add(visitObj);
+    await db.doc(docRef.id).update({
+      ...visitObj,
+      customer_id: customerId,
+      id: docRef.id, // Include the ID in the document
+    });
+
+    await insertVisitItems(visit_items, docRef.id);
+
     // const response = querySnapshots.docs.map((doc) => doc.data());
     return res.status(200).json("Sale data Modified successfully");
   } catch (error) {
     return res.status(500).send(error);
   }
 };
+
+// exports.createVisit = async (req, res) => {
+//   const { visit, customer, visit_items } = req.body;
+//   try {
+//     const visitObj = setPayload(visit);
+//     db.add(visitObj);
+//     insertVisitItems(visit_items);
+
+//     let query = customerDb;
+//     const mobile_number = customer.mobile_number;
+//     query = query.where("mobile_number", "==", mobile_number);
+//     const querySnapshots = await query.get();
+//     if (querySnapshots.empty) {
+//       insertCustomer(customer);
+//     } else {
+//       const data = querySnapshots.docs[0].data();
+//       updateCustomer(data, visitObj);
+//     }
+//     // const response = querySnapshots.docs.map((doc) => doc.data());
+//     return res.status(200).json("Sale data Modified successfully");
+//   } catch (error) {
+//     return res.status(500).send(error);
+//   }
+// };
 
 const calculateRemainingLoyalty = (loyalty, visitObj) => {
   const { points_redeemed, points_gained } = visitObj;
@@ -63,13 +96,18 @@ const updateCustomer = async (customerData, visitObj) => {
   }
 };
 
-const insertVisitItems = async (visitItems) => {
+const insertVisitItems = async (visitItems, visitId) => {
   try {
     const promises = visitItems.map(async (item) => {
       try {
         const obj = setVisitItemPayload(item);
-        delete obj.id;
-        await visitItemsdb.add(obj);
+        const docRef = await visitItemsdb.add(obj);
+        const result = await visitItemsdb.doc(docRef.id).update({
+          ...obj,
+          visit_id: visitId,
+          id: docRef.id, // Include the ID in the document
+        });
+
         return {
           success: true,
           message: `Document with id ${obj.id} created successfully`,
@@ -82,7 +120,6 @@ const insertVisitItems = async (visitItems) => {
         };
       }
     });
-
     const responses = await Promise.all(promises);
     return responses;
   } catch (error) {
@@ -93,7 +130,9 @@ const insertVisitItems = async (visitItems) => {
 const insertCustomer = async (data) => {
   try {
     const customerObj = setCustomerPayload(data);
-    await customerDb.add(customerObj);
+    const docRef = await customerDb.add(customerObj);
+    await customerDb.doc(docRef.id).update({ ...customerObj, id: docRef.id });
+    return docRef.id;
   } catch (error) {
     return {
       success: false,
@@ -125,10 +164,15 @@ exports.getAllVisits = async (req, res) => {
 
 exports.uploadVisitsJson = async (req, res) => {
   try {
-    const promises = json.map(async (item, index) => {
+    const promises = json.map(async (item) => {
       try {
-        const obj = setPayload(item, index + 1);
-        await db.doc("/" + obj.id + "/").create(obj);
+        const obj = setPayload(item);
+        await db.add(obj).then((docRef) => {
+          return db.doc(docRef.id).update({
+            ...obj,
+            id: docRef.id, // Include the ID in the document
+          });
+        });
         return {
           success: true,
           message: `Document with id ${obj.id} created successfully`,

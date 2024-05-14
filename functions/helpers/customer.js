@@ -1,6 +1,6 @@
 const { Timestamp } = require("firebase-admin/firestore");
 
-exports.setCustomerPayload = (obj, ind = null) => {
+exports.setCustomerPayload = (obj) => {
   const {
     account_id,
     address1,
@@ -52,13 +52,8 @@ exports.setCustomerPayload = (obj, ind = null) => {
     total_loyalty_points,
     created_at,
   };
-  if (ind) {
-    obj2.id = ind;
-    obj2.dob = Timestamp.fromDate(new Date(obj2.dob)) || null;
-    obj2.last_visited_date = Timestamp.fromDate(
-      new Date(obj2.last_visited_date)
-    );
-    obj2.created_at = Timestamp.fromDate(new Date(obj2.created_at));
-  }
+  obj2.dob = Timestamp.fromDate(new Date(obj2.dob)) || null;
+  obj2.last_visited_date = Timestamp.fromDate(new Date(obj2.last_visited_date));
+  obj2.created_at = Timestamp.fromDate(new Date(obj2.created_at));
   return obj2;
 };

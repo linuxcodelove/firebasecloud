@@ -1,5 +1,5 @@
 const { Timestamp } = require("firebase-admin/firestore");
-exports.setPayload = (obj, ind = null) => {
+exports.setPayload = (obj) => {
   const {
     account_id,
     amount,
@@ -21,7 +21,6 @@ exports.setPayload = (obj, ind = null) => {
     sale_id,
     points_gained,
     points_redeemed,
-    id,
   } = obj;
 
   const obj2 = {
@@ -45,15 +44,12 @@ exports.setPayload = (obj, ind = null) => {
     sale_id,
     points_gained,
     points_redeemed,
-    id,
   };
-  if (ind) {
-    obj2.id = obj2.id ? obj2.id : ind;
-    obj2.check_closer_time =
-      Timestamp.fromDate(new Date(obj2.check_closer_time)) || null;
-    obj2.visit_date_time =
-      Timestamp.fromDate(new Date(obj2.visit_date_time)) || null;
-  }
+
+  obj2.check_closer_time =
+    Timestamp.fromDate(new Date(obj2.check_closer_time)) || null;
+  obj2.visit_date_time =
+    Timestamp.fromDate(new Date(obj2.visit_date_time)) || null;
 
   return obj2;
 };
