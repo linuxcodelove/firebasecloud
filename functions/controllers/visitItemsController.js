@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("visit_items");
 const json = require("../data3/visit_items");
-const { setPayload } = require("../helpers/visitItems");
+const { setVisitItemPayload } = require("../helpers/visitItems");
 const { formatDate } = require("../helpers/common");
 
 exports.getAllVisitItems = async (req, res) => {
@@ -9,7 +9,7 @@ exports.getAllVisitItems = async (req, res) => {
     let response = [];
     const snapshot = await db.get();
     snapshot.forEach((doc) => {
-      const obj = setPayload(doc.data());
+      const obj = setVisitItemPayload(doc.data());
       const item = {
         ...obj,
       };
@@ -25,7 +25,7 @@ exports.uploadVisitItemsJson = async (req, res) => {
   try {
     const promises = json.map(async (item, index) => {
       try {
-        const obj = setPayload(item, index + 1);
+        const obj = setVisitItemPayload(item, index + 1);
         await db.doc("/" + obj.id + "/").create(obj);
         return {
           success: true,

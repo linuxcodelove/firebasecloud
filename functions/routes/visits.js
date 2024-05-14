@@ -4,6 +4,7 @@ const cors = require("cors");
 app.use(cors({ origin: true }));
 const visitsController = require("../controllers/visitController");
 
+app.post("/storeData", visitsController.createVisit);
 app.post("/", visitsController.uploadVisitsJson);
 app.get("/mostVisit", visitsController.mostVisited);
 app.get("/amountSpent", visitsController.averageAmountSpent);
@@ -17,7 +18,10 @@ app.get(
 );
 
 app.get("/visitsInCertainDays", visitsController.getVisitsInCertainDays);
-app.get("/visitsInParticularDays", visitsController.getVisitsInCertainDaysFiltered);
+app.get(
+  "/visitsInParticularDays",
+  visitsController.getVisitsInCertainDaysFiltered
+);
 
 app.get("/", visitsController.getAllVisits);
 

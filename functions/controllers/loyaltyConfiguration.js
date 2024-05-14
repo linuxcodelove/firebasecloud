@@ -118,13 +118,16 @@ exports.redemption_amount = async (req, res) => {
     const loyaltyConfigResponse = await getLoyaltyData(req, res);
     const { data: loyaltyConfig } = loyaltyConfigResponse;
     const pointPerRupee = loyaltyConfig.data[0].rupee_per_point;
-    const redeemed_amount =  Math.floor(points_to_redeem * pointPerRupee);
+    const redeemed_amount = Math.floor(points_to_redeem * pointPerRupee);
     const amount_to_pay = amount - redeemed_amount;
-    customer_redemption = customer.total_loyalty_points - points_to_redeem;
-    current_payment_loyalty = Math.floor(
+    const customer_redemption =
+      customer.total_loyalty_points - points_to_redeem;
+    const current_payment_loyalty = Math.floor(
       amount_to_pay * loyaltyConfig.data[0].point_per_rupee
     );
-    remaining_loyalty_points =  Math.floor(customer_redemption + current_payment_loyalty);
+    const remaining_loyalty_points = Math.floor(
+      customer_redemption + current_payment_loyalty
+    );
     await updateCustomerLoyalty(customer_id, remaining_loyalty_points);
     return res.status(200).send({
       redeemed_amount,

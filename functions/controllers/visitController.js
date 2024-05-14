@@ -1,9 +1,106 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("visits");
+const customerDb = admin.firestore().collection("customer_details");
+const visitItemsdb = admin.firestore().collection("visit_items");
 const json = require("../data3/visits");
 const { setPayload } = require("../helpers/visits");
-const { formatDate, formSimpleQuery } = require("../helpers/common");
+const { setCustomerPayload } = require("../helpers/customer");
+const { setVisitItemPayload } = require("../helpers/visitItems");
+const { formatDate } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");
+
+exports.createVisit = async (req, res) => {
+  const { visit, customer, visit_items } = req.body;
+  try {
+    const visitObj = setPayload(visit);
+    db.add(visitObj);
+    insertVisitItems(visit_items);
+    let query = customerDb;
+    const mobile_number = customer.mobile_number;
+    query = query.where("mobile_number", "==", mobile_number);
+    const querySnapshots = await query.get();
+
+    if (querySnapshots.empty) {
+      insertCustomer(customer);
+    } else {
+      const data = querySnapshots.docs[0].data();
+      updateCustomer(data, visitObj);
+    }
+    // const response = querySnapshots.docs.map((doc) => doc.data());
+    return res.status(200).json("Sale data Modified successfully");
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+};
+
+const calculateRemainingLoyalty = (loyalty, visitObj) => {
+  const { points_redeemed, points_gained } = visitObj;
+  return loyalty - points_redeemed + points_gained;
+};
+const updateCustomer = async (customerData, visitObj) => {
+  try {
+    const customer = customerDb.doc("/" + customerData.id + "/");
+    const currentLoyaltyPoints = calculateRemainingLoyalty(
+      customerData.total_loyalty_points,
+      visitObj
+    );
+    const customerObj = {
+      last_visited_date: visitObj.visit_date_time,
+      last_visited_store: visitObj.store_visited,
+      last_spent_amount: visitObj.amount_paid,
+      visits_count: customerData.visits_count + 1,
+      total_spent: customerData.total_spent + visitObj.amount_paid,
+      total_loyalty_points: currentLoyaltyPoints,
+      // top_visited_store: getMostedVisitedStore()
+    };
+    const response = await customer.update(customerObj);
+    return response;
+    // return res.status(200).send(response);
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return "error";
+    // res.status(500).send("An error occurred while updating the product");
+  }
+};
+
+const insertVisitItems = async (visitItems) => {
+  try {
+    const promises = visitItems.map(async (item) => {
+      try {
+        const obj = setVisitItemPayload(item);
+        delete obj.id;
+        await visitItemsdb.add(obj);
+        return {
+          success: true,
+          message: `Document with id ${obj.id} created successfully`,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          message: `Error creating document for item: ${item}`,
+          error: error.message,
+        };
+      }
+    });
+
+    const responses = await Promise.all(promises);
+    return responses;
+  } catch (error) {
+    return error;
+  }
+};
+
+const insertCustomer = async (data) => {
+  try {
+    const customerObj = setCustomerPayload(data);
+    await customerDb.add(customerObj);
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
 
 exports.getAllVisits = async (req, res) => {
   try {
@@ -138,9 +235,9 @@ exports.averageAmountSpent = async (req, res) => {
       }
       spentAmount[customerId].totalAmount += data.amount_paid;
       spentAmount[customerId].visitCount++;
-      spentAmount[customerId].average =
-        (spentAmount[customerId].totalAmount /
-        spentAmount[customerId].visitCount).toFixed(2);
+      spentAmount[customerId].average = (
+        spentAmount[customerId].totalAmount / spentAmount[customerId].visitCount
+      ).toFixed(2);
       spentAmount[customerId].customerName = data.customer_name;
     });
     res.status(200).send({
@@ -182,9 +279,10 @@ exports.averageTimeSpent = async (req, res) => {
       spentTime[customerId].totalTimeSpentInMinutes +=
         data.time_spend_in_minutes;
       spentTime[customerId].visitCount++;
-      spentTime[customerId].averageMinutes =
-        (spentTime[customerId].totalTimeSpentInMinutes /
-        spentTime[customerId].visitCount).toFixed(2);
+      spentTime[customerId].averageMinutes = (
+        spentTime[customerId].totalTimeSpentInMinutes /
+        spentTime[customerId].visitCount
+      ).toFixed(2);
       spentTime[customerId].customerName = data.customer_name;
     });
 

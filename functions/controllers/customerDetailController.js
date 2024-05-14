@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("customer_details");
 const json = require("../data3/customer_details");
-const { setPayload } = require("../helpers/customer");
+const { setCustomerPayload } = require("../helpers/customer");
 const { formatDate, formSimpleQuery } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");
 
@@ -10,7 +10,7 @@ exports.getAllCustomerDetail = async (req, res) => {
     let response = [];
     const snapshot = await db.get();
     snapshot.forEach((doc) => {
-      const obj = setPayload(doc.data());
+      const obj = setCustomerPayload(doc.data());
       const item = {
         ...obj,
       };
@@ -24,7 +24,7 @@ exports.getAllCustomerDetail = async (req, res) => {
 
 exports.createCustomerDetail = async (req, res) => {
   try {
-    const obj = setPayload(req.body);
+    const obj = setCustomerPayload(req.body);
     const customerDetail = await db.doc("/" + req.body.id + "/").create(obj);
     let response = customerDetail.data();
     res.status(200).json(response);
@@ -47,7 +47,7 @@ exports.uploadCustomerJson = async (req, res) => {
   try {
     const promises = json.map(async (item, index) => {
       try {
-        const obj = setPayload(item, index + 1);
+        const obj = setCustomerPayload(item, index + 1);
         await db.doc("/" + obj.id + "/").create(obj);
         return {
           success: true,
@@ -295,9 +295,9 @@ exports.getCustomerFeedback = async (req, res) => {
 exports.getCustomerByMobile = async (req, res) => {
   let query = db;
   const mobile_number = req.query.mobile_number;
-  if (!mobile_number)  return res.status(404).send("Mobile number is required");
+  if (!mobile_number) return res.status(404).send("Mobile number is required");
 
- query = query.where("mobile_number", "==", mobile_number);
+  query = query.where("mobile_number", "==", mobile_number);
   try {
     fetchData(query, res);
   } catch (error) {

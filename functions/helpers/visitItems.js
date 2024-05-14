@@ -1,5 +1,5 @@
 const { Timestamp } = require("firebase-admin/firestore");
-exports.setPayload = (obj, ind = null) => {
+exports.setVisitItemPayload = (obj, ind = null) => {
   const {
     account_id,
     amount,
