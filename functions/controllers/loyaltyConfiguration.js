@@ -82,14 +82,25 @@ async function getLoyaltyData() {
   }
 }
 
-async function getCustomer(id) {
-  const customerDetail = await customerdb.doc(id).get();
-  let response = customerDetail.data();
-  return response;
+async function getCustomer(customer_id) {
+  try {
+    const query = customerdb.where("customer_id", "==", Number(customer_id));
+    const querySnapshot = await query.get();
+    if (querySnapshot.empty) {
+      return null;
+    } else {
+      return querySnapshot.docs[0].data();
+    }
+  } catch (error) {
+    console.error("Error fetching customer:", error);
+    throw error;
+  }
 }
 async function updateCustomerLoyalty(customer_id, remaining_loyalty_points) {
   try {
-    const customerRef = customerdb.doc(customer_id);
+    const query = customerdb.where("customer_id", "==", Number(customer_id));
+    const querySnapshot = await query.get();
+    const customerRef = querySnapshot.docs[0].ref;
     await customerRef.update({
       total_loyalty_points: remaining_loyalty_points,
     });
@@ -107,17 +118,18 @@ exports.redemption_amount = async (req, res) => {
     const loyaltyConfigResponse = await getLoyaltyData(req, res);
     const { data: loyaltyConfig } = loyaltyConfigResponse;
     const pointPerRupee = loyaltyConfig.data[0].rupee_per_point;
-    const redeemed_amount = points_to_redeem * pointPerRupee;
+    const redeemed_amount =  Math.floor(points_to_redeem * pointPerRupee);
     const amount_to_pay = amount - redeemed_amount;
     customer_redemption = customer.total_loyalty_points - points_to_redeem;
-    total_amount_loyalty =
-      amount_to_pay * loyaltyConfig.data[0].point_per_rupee;
-    remaining_loyalty_points = customer_redemption + total_amount_loyalty;
-    console.log(remaining_loyalty_points);
+    current_payment_loyalty = Math.floor(
+      amount_to_pay * loyaltyConfig.data[0].point_per_rupee
+    );
+    remaining_loyalty_points =  Math.floor(customer_redemption + current_payment_loyalty);
     await updateCustomerLoyalty(customer_id, remaining_loyalty_points);
     return res.status(200).send({
       redeemed_amount,
       amount_to_pay,
+      current_payment_loyalty,
       remaining_loyalty_points,
     });
   } catch (error) {
