@@ -1,143 +1,23 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("visits");
-const customerDb = admin.firestore().collection("customer_details");
+// const customerDb = admin.firestore().collection("customer_details");
 const visitItemsdb = admin.firestore().collection("visit_items");
 const json = require("../data4/visits");
 const { setPayload } = require("../helpers/visits");
-const { setCustomerPayload } = require("../helpers/customer");
+// const { setCustomerPayload } = require("../helpers/customer");
 const { setVisitItemPayload } = require("../helpers/visitItems");
 const { formatDate } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");
+// const customerData = require("../data4/customer_details");
 
-exports.createVisit = async (req, res) => {
+exports.createVisit = async (item, cb) => {
   try {
-    const { visit, customer, visit_items } = req.body;
-    let query = customerDb;
-    const mobile_number = customer.mobile_number;
-    query = query.where("mobile_number", "==", mobile_number);
-    const querySnapshots = await query.get();
-    const visitObj = setPayload(visit);
-
-    let customerId;
-    if (querySnapshots.empty) {
-      customerId = await insertCustomer(customer);
-    } else {
-      const data = querySnapshots.docs[0].data();
-      customerId = data.id;
-      await updateCustomer(data, visitObj);
-    }
-    const docRef = await db.add(visitObj);
-    await db.doc(docRef.id).update({
-      ...visitObj,
-      customer_id: customerId,
-      id: docRef.id, // Include the ID in the document
-    });
-
-    await insertVisitItems(visit_items, docRef.id);
-
-    // const response = querySnapshots.docs.map((doc) => doc.data());
-    return res.status(200).json("Sale data Modified successfully");
+    const visitDetail = db.doc("/" + item.id + "/");
+    await visitDetail.set(item);
+    let response = (await visitDetail.get()).data();
+    return cb(response);
   } catch (error) {
-    return res.status(500).send(error);
-  }
-};
-
-// exports.createVisit = async (req, res) => {
-//   const { visit, customer, visit_items } = req.body;
-//   try {
-//     const visitObj = setPayload(visit);
-//     db.add(visitObj);
-//     insertVisitItems(visit_items);
-
-//     let query = customerDb;
-//     const mobile_number = customer.mobile_number;
-//     query = query.where("mobile_number", "==", mobile_number);
-//     const querySnapshots = await query.get();
-//     if (querySnapshots.empty) {
-//       insertCustomer(customer);
-//     } else {
-//       const data = querySnapshots.docs[0].data();
-//       updateCustomer(data, visitObj);
-//     }
-//     // const response = querySnapshots.docs.map((doc) => doc.data());
-//     return res.status(200).json("Sale data Modified successfully");
-//   } catch (error) {
-//     return res.status(500).send(error);
-//   }
-// };
-
-const calculateRemainingLoyalty = (loyalty, visitObj) => {
-  const { points_redeemed, points_gained } = visitObj;
-  return loyalty - points_redeemed + points_gained;
-};
-const updateCustomer = async (customerData, visitObj) => {
-  try {
-    const customer = customerDb.doc("/" + customerData.id + "/");
-    const currentLoyaltyPoints = calculateRemainingLoyalty(
-      customerData.total_loyalty_points,
-      visitObj
-    );
-    const customerObj = {
-      last_visited_date: visitObj.visit_date_time,
-      last_visited_store: visitObj.store_visited,
-      last_spent_amount: visitObj.amount_paid,
-      visits_count: customerData.visits_count + 1,
-      total_spent: customerData.total_spent + visitObj.amount_paid,
-      total_loyalty_points: currentLoyaltyPoints,
-      // top_visited_store: getMostedVisitedStore()
-    };
-    const response = await customer.update(customerObj);
-    return response;
-    // return res.status(200).send(response);
-  } catch (error) {
-    console.error("Error updating product:", error);
-    return "error";
-    // res.status(500).send("An error occurred while updating the product");
-  }
-};
-
-const insertVisitItems = async (visitItems, visitId) => {
-  try {
-    const promises = visitItems.map(async (item) => {
-      try {
-        const obj = setVisitItemPayload(item);
-        const docRef = await visitItemsdb.add(obj);
-        const result = await visitItemsdb.doc(docRef.id).update({
-          ...obj,
-          visit_id: visitId,
-          id: docRef.id, // Include the ID in the document
-        });
-
-        return {
-          success: true,
-          message: `Document with id ${obj.id} created successfully`,
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Error creating document for item: ${item}`,
-          error: error.message,
-        };
-      }
-    });
-    const responses = await Promise.all(promises);
-    return responses;
-  } catch (error) {
-    return error;
-  }
-};
-
-const insertCustomer = async (data) => {
-  try {
-    const customerObj = setCustomerPayload(data);
-    const docRef = await customerDb.add(customerObj);
-    await customerDb.doc(docRef.id).update({ ...customerObj, id: docRef.id });
-    return docRef.id;
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
+    return "Create visit Failed";
   }
 };
 
@@ -165,34 +45,12 @@ exports.getAllVisits = async (req, res) => {
 exports.uploadVisitsJson = async (req, res) => {
   try {
     const promises = json.map(async (item) => {
-      try {
-        const obj = setPayload(item);
-        await db.add(obj).then((docRef) => {
-          return db.doc(docRef.id).update({
-            ...obj,
-            id: docRef.id, // Include the ID in the document
-          });
-        });
-        return {
-          success: true,
-          message: `Document with id ${obj.id} created successfully`,
-        };
-      } catch (error) {
-        // If an error occurs during document creation
-        console.error(`Error creating document for item:`, item, error);
-        return {
-          success: false,
-          message: `Error creating document for item: ${item}`,
-          error: error.message,
-        };
-      }
+      const obj = setPayload(item);
+      this.createVisit(obj, (response) => response);
     });
-
     const responses = await Promise.all(promises);
     return res.status(200).json(responses);
   } catch (error) {
-    // If an error occurs during the mapping or Promise.all
-    console.error("Error uploading customer JSON:", error);
     return res.status(500).json({
       success: false,
       message: "Error uploading customer JSON",

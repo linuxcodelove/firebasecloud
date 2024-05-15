@@ -3,9 +3,6 @@ const db = admin.firestore().collection("loyalty_configuration");
 const customerdb = admin.firestore().collection("customer_details");
 const json = require("../data3/loyalty_configuration");
 const { setPayload } = require("../helpers/loyalty_configuration");
-const { formatDate, formSimpleQuery } = require("../helpers/common");
-const { Filter } = require("firebase-admin/firestore");
-const { customers } = require("../controllers/customerDetailController");
 exports.uploadloyaltyConfigJson = async (req, res) => {
   try {
     const promises = json.map(async (item, index) => {
@@ -32,7 +29,7 @@ exports.uploadloyaltyConfigJson = async (req, res) => {
   }
 };
 
-exports.getLoyalty = async (req, res) => {
+exports.getLoyaltyConfig = async (cb) => {
   try {
     let response = [];
     const snapshot = await db.get();
@@ -43,44 +40,26 @@ exports.getLoyalty = async (req, res) => {
       };
       response.push(item);
     });
-    return res.status(200).send({
-      length: response.length,
-      data: response,
+    return cb(response);
+  } catch (error) {
+    return "create Loyalty config failed";
+  }
+};
+
+exports.getLoyalty = async (req, res) => {
+  try {
+    await this.getLoyaltyConfig((response) => {
+      return res.status(200).send({
+        length: response.length,
+        data: response,
+      });
     });
   } catch (error) {
-    console.error("Error fetching the configuration", error);
     return res
       .status(500)
       .send("An error occurred while fetching the configuration");
   }
 };
-
-async function getLoyaltyData() {
-  try {
-    let response = [];
-    const snapshot = await db.get();
-    snapshot.forEach((doc) => {
-      const obj = setPayload(doc.data());
-      const item = {
-        ...obj,
-      };
-      response.push(item);
-    });
-    return {
-      status: 200,
-      data: {
-        length: response.length,
-        data: response,
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching the configuration", error);
-    return {
-      status: 500,
-      error: "An error occurred while fetching the configuration",
-    };
-  }
-}
 
 async function getCustomer(customer_id) {
   try {
@@ -115,7 +94,7 @@ exports.redemption_amount = async (req, res) => {
   const { customer_id, amount, points_to_redeem } = req.query;
   const customer = await getCustomer(customer_id);
   try {
-    const loyaltyConfigResponse = await getLoyaltyData(req, res);
+    const loyaltyConfigResponse = await this.getLoyalty(req, res);
     const { data: loyaltyConfig } = loyaltyConfigResponse;
     const pointPerRupee = loyaltyConfig.data[0].rupee_per_point;
     const redeemed_amount = Math.floor(points_to_redeem * pointPerRupee);

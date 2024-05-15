@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("customer_details");
-const json = require("../data4/customer_details");
+const jsonData = require("../data4/customer_details");
 const { setCustomerPayload } = require("../helpers/customer");
 const { formatDate, formSimpleQuery } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");
@@ -22,12 +22,22 @@ exports.getAllCustomerDetail = async (req, res) => {
   }
 };
 
+exports.createCustomer = async (item, cb) => {
+  try {
+    const customerDetail = db.doc("/" + item.customer_id + "/");
+    await customerDetail.set(item);
+    let response = (await customerDetail.get()).data();
+    return cb(response);
+  } catch (error) {
+    return "Create customer Failed";
+  }
+};
+
 exports.createCustomerDetail = async (req, res) => {
   try {
-    const obj = setCustomerPayload(req.body);
-    const customerDetail = await db.doc("/" + req.body.id + "/").create(obj);
-    let response = customerDetail.data();
-    res.status(200).json(response);
+    await this.createCustomer(req.body, (response) => {
+      res.status(200).json(response);
+    });
   } catch (error) {
     res.status(500).send(error);
   }
@@ -45,29 +55,9 @@ exports.getCustomerDetail = async (req, res) => {
 
 exports.uploadCustomerJson = async (req, res) => {
   try {
-    const promises = json.map(async (item) => {
-      try {
-        const obj = setCustomerPayload(item);
-        // await db.doc("/" + obj.id + "/").create(obj);
-        await db.add(obj).then((docRef) => {
-          return db.doc(docRef.id).update({
-            ...obj,
-            id: docRef.id, // Include the ID in the document
-          });
-        });
-        return {
-          success: true,
-          message: `Document with id ${obj.id} created successfully`,
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Error creating document for item: ${item}`,
-          error: error.message,
-        };
-      }
-    });
-
+    const promises = jsonData.map((item) =>
+      this.createCustomer(item, (response) => response)
+    );
     const responses = await Promise.all(promises);
     return res.status(200).json(responses);
   } catch (error) {

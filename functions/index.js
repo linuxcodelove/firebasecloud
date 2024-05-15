@@ -19,6 +19,7 @@ const visitItemRoutes = require("./routes/visitItems.js");
 const visitRoutes = require("./routes/visits.js");
 const loyaltyConfiguration = require("./routes/loyaltyConfiguration.js");
 const offerRoutes = require("./routes/offers.js");
+const saleRoutes = require("./routes/sale.js");
 
 app.use((req, res, next) => {
   const authToken = req.headers.authorization;
@@ -43,6 +44,7 @@ app.use("/visit_items", visitItemRoutes);
 app.use("/visits", visitRoutes);
 app.use("/loyalty_configuration", loyaltyConfiguration);
 app.use("/offers", offerRoutes);
+app.use("/sale", saleRoutes);
 
 // Export the api to Firebase cloud funtions
 exports.app = functions.https.onRequest(app);

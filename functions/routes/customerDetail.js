@@ -35,7 +35,8 @@ app.get(
 app.get("/feedback", customerDetailController.getCustomerFeedback);
 app.get("/countByGender", customerDetailController.getGenderCount);
 app.get("/customerByMobile", customerDetailController.getCustomerByMobile);
-app.post("/", customerDetailController.uploadCustomerJson);
+app.post("/", customerDetailController.createCustomerDetail);
+app.post("/json", customerDetailController.uploadCustomerJson);
 app.get("/:id", customerDetailController.getCustomerDetail);
 app.get("/", customerDetailController.getAllCustomerDetail);
 

@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("visit_items");
-const json = require("../data3/visit_items");
+// const json = require("../data4/visit_items");
 const { setVisitItemPayload } = require("../helpers/visitItems");
 const { formatDate } = require("../helpers/common");
 
@@ -21,35 +21,40 @@ exports.getAllVisitItems = async (req, res) => {
   }
 };
 
-exports.uploadVisitItemsJson = async (req, res) => {
+exports.createVisitItem = async (item, cb) => {
   try {
-    const promises = json.map(async (item) => {
-      try {
-        const obj = setVisitItemPayload(item);
-        // await db.doc("/" + obj.id + "/").create(obj);
-        await db.add(obj).then((docRef) => {
-          return db.doc(docRef.id).update({
-            ...obj,
-            id: docRef.id, // Include the ID in the document
-          });
-        });
-        return {
-          success: true,
-          message: `Document with id ${obj.id} created successfully`,
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Error creating document for item: ${item}`,
-          error: error.message,
-        };
-      }
-    });
-
-    const responses = await Promise.all(promises);
-    return res.status(200).json(responses);
+    const visitItemDetail = await db.add(item);
+    let response = (await visitItemDetail.get()).data();
+    return cb(response);
   } catch (error) {
-    return res.status(500).send(error);
+    return "Create Visit Item Failed";
+  }
+};
+
+// exports.uploadVisitItemsJson = async (req, res) => {
+//   try {
+//     const promises = json.map(async (item) => {
+//       const obj = setVisitItemPayload(item);
+//       this.createVisitItem(obj, (response) => response);
+//     });
+//     const responses = await Promise.all(promises);
+//     return res.status(200).json(responses);
+//   } catch (error) {
+//     return res.status(500).send(error);
+//   }
+// };
+
+exports.uploadVisitsItems = async (items, visitId) => {
+  console.log(items, visitId, "visit items");
+  try {
+    const promises = items.map(async (i) => {
+      const vItem = { ...i, visit_id: visitId };
+      return this.createVisitItem(vItem, (response) => response);
+    });
+    const responses = await Promise.all(promises);
+    return responses;
+  } catch (error) {
+    return error;
   }
 };
 
