@@ -11,6 +11,8 @@ const sales = [
     date_time: "2024-05-15 18:06:00",
     points_gained: 10,
     points_redeemed: 0,
+    gender: "male",
+    created_at: "2024-05-15",
     items: [
       {
         id: 2001,
