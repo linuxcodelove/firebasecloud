@@ -45,7 +45,6 @@ exports.createVisitItem = async (item, cb) => {
 // };
 
 exports.uploadVisitsItems = async (items, visitId) => {
-  console.log(items, visitId, "visit items");
   try {
     const promises = items.map(async (i) => {
       const vItem = { ...i, visit_id: visitId };

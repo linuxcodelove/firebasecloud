@@ -44,6 +44,10 @@ const createVisitData = (item, amountPaid) => {
     date_time,
     points_gained,
     points_redeemed,
+    loyalty_discount_amount,
+    discount_in_percentage,
+    flat_discount,
+    free_item,
   } = item;
 
   return {
@@ -57,6 +61,10 @@ const createVisitData = (item, amountPaid) => {
     date_time,
     points_gained,
     points_redeemed,
+    loyalty_discount_amount,
+    loyalty_discount_percentage: discount_in_percentage,
+    loyalty_flat_discount: flat_discount,
+    free_item: free_item || null,
   };
 };
 
@@ -81,25 +89,61 @@ const updateCustomerData = async (item, customerData, amountToBePaid) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const {
+    let {
       mobile_number,
       bill_amount,
       points_redeemed,
       items,
       id,
       customer_loyalty_points,
+      loyalty_type,
+      loyalty_discount: {
+        discount_in_percentage,
+        max_amount,
+        flat_discount,
+        required_points,
+        free_item,
+      },
+      loyalty_discount_amount,
     } = req.body;
 
-    const { min_point_to_redeem, rupee_per_point } =
+    let { min_point_to_redeem, rupee_per_point } =
       await loyaltyController.getLoyaltyConfig((response) => response[0]);
+
+    let amountToBePaid;
+
+    switch (loyalty_type) {
+      case 1: // Cashback
+        loyalty_discount_amount = points_redeemed * rupee_per_point;
+        amountToBePaid = bill_amount - loyalty_discount_amount;
+        break;
+      case 2: // Percentage discount
+        const discount = bill_amount * (discount_in_percentage / 100);
+        loyalty_discount_amount = discount > max_amount ? max_amount : discount;
+        amountToBePaid = bill_amount - loyalty_discount_amount;
+        points_redeemed = required_points;
+        break;
+      case 3: // Flat discount
+        loyalty_discount_amount = flat_discount;
+        amountToBePaid = bill_amount - loyalty_discount_amount;
+        points_redeemed = required_points;
+        break;
+      case 4:
+        loyalty_discount_amount = 0;
+        amountToBePaid = bill_amount;
+        points_redeemed = required_points;
+        break;
+      default:
+        loyalty_discount_amount = 0;
+        amountToBePaid = bill_amount;
+        points_redeemed = 0;
+    }
 
     if (
       customer_loyalty_points < points_redeemed ||
-      customer_loyalty_points < min_point_to_redeem
+      (points_redeemed && customer_loyalty_points < min_point_to_redeem)
     )
       throw new Error("Customer dont have enough loyalty points to redeem!");
-
-    const amountToBePaid = bill_amount - points_redeemed * rupee_per_point;
 
     const customerSnapshot = await customerDb
       .where("mobile_number", "==", mobile_number)
@@ -113,7 +157,16 @@ exports.createSale = async (req, res) => {
       updateCustomerData(req.body, customerData, amountToBePaid);
     }
 
-    const visitData = createVisitData(req.body, amountToBePaid);
+    const visitData = createVisitData(
+      {
+        ...req.body,
+        loyalty_discount_amount,
+        discount_in_percentage,
+        flat_discount,
+        free_item,
+      },
+      amountToBePaid
+    );
     const response = await visitController.createVisit(
       visitData,
       (response) => response
