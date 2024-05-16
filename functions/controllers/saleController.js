@@ -81,14 +81,25 @@ const updateCustomerData = async (item, customerData, amountToBePaid) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const { mobile_number, bill_amount, points_redeemed, items, id } = req.body;
+    const {
+      mobile_number,
+      bill_amount,
+      points_redeemed,
+      items,
+      id,
+      customer_loyalty_points,
+    } = req.body;
 
-    const loyaltyConfig = await loyaltyController.getLoyaltyConfig(
-      (response) => response[0]
-    );
+    const { min_point_to_redeem, rupee_per_point } =
+      await loyaltyController.getLoyaltyConfig((response) => response[0]);
 
-    const amountToBePaid =
-      bill_amount - points_redeemed * loyaltyConfig.rupee_per_point;
+    if (
+      customer_loyalty_points < points_redeemed ||
+      customer_loyalty_points < min_point_to_redeem
+    )
+      throw new Error("Customer dont have enough loyalty points to redeem!");
+
+    const amountToBePaid = bill_amount - points_redeemed * rupee_per_point;
 
     const customerSnapshot = await customerDb
       .where("mobile_number", "==", mobile_number)
@@ -96,10 +107,10 @@ exports.createSale = async (req, res) => {
 
     if (customerSnapshot.empty) {
       const customer = createCustomerData(req.body);
-      await customerController.createCustomer(customer, () => {});
+      customerController.createCustomer(customer, () => {});
     } else {
       const customerData = customerSnapshot.docs[0].data();
-      await updateCustomerData(req.body, customerData, amountToBePaid);
+      updateCustomerData(req.body, customerData, amountToBePaid);
     }
 
     const visitData = createVisitData(req.body, amountToBePaid);
@@ -112,6 +123,6 @@ exports.createSale = async (req, res) => {
 
     return res.status(200).json(response);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send(String(error));
   }
 };
