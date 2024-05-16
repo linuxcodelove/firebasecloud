@@ -47,8 +47,24 @@ exports.getOffers = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching the offer", error);
-    return res
-      .status(500)
-      .send("An error occurred while fetching the offers");
+    return res.status(500).send("An error occurred while fetching the offers");
+  }
+};
+
+exports.getAllOffers = async (req, res) => {
+  try {
+    let response = [];
+    const snapshot = await db.get();
+    snapshot.forEach((doc) => {
+      const obj = setPayload(doc.data());
+      const item = {
+        ...obj,
+      };
+      response.push(item);
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching the offer", error);
+    return res.status(500).send("An error occurred while fetching the offers");
   }
 };

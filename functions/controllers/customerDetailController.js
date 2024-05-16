@@ -4,6 +4,7 @@ const jsonData = require("../data4/customer_details");
 const { setCustomerPayload } = require("../helpers/customer");
 const { formatDate, formSimpleQuery } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");
+const offers = require("../controllers/offerController");
 
 exports.getAllCustomerDetail = async (req, res) => {
   try {
@@ -289,24 +290,26 @@ exports.getCustomerFeedback = async (req, res) => {
 };
 
 exports.getCustomerByMobile = async (req, res) => {
-  let query = db;
   const mobile_number = req.query.mobile_number;
-  if (!mobile_number) return res.status(404).send("Mobile number is required");
-
-  query = query.where("mobile_number", "==", mobile_number);
+  if (!mobile_number) return res.status(400).send("Mobile number is required");
   try {
-    fetchData(query, res);
+    const allOffers = await offers.getAllOffers();
+    const querySnapshots = await db
+      .where("mobile_number", "==", mobile_number)
+      .get();
+    const customer = querySnapshots.docs[0].data();
+    customer.offers = [];
+    // Assign all the offers that exists for the customer
+    allOffers.forEach((offer) => {
+      if (!offer.customers || offer.customers.includes(customer.customer_id)) {
+        customer.offers.push(offer);
+      }
+    });
+    return res.status(200).json(customer);
   } catch (error) {
-    return res.status(500).send(error);
-  }
-};
-
-const fetchData = async (query, res) => {
-  try {
-    const querySnapshots = await query.get();
-    const response = querySnapshots.docs.map((doc) => doc.data());
-    return res.status(200).json(response);
-  } catch (error) {
-    return res.status(500).send(error);
+    console.error("Error fetching customer data:", error);
+    return res
+      .status(500)
+      .send("An error occurred while fetching customer data");
   }
 };
