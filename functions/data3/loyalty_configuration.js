@@ -6,31 +6,49 @@ const loyaltyConfguration = [
     min_point_to_redeem: 100,
     free_items: [
       {
-        name: "Coke",
+        id: 2001,
+        name: "coke",
         points: 100,
       },
       {
-        name: "Beer",
-        points: 300,
+        id: 2002,
+        name: "Rum",
+        points: 500,
       },
       {
-        name: "Fried chicken",
-        points: 50,
+        id: 2003,
+        name: "Brandy",
+        points: 400,
       },
     ],
-    discount: [
+    flat_discount: [
+      {
+        price: 1000,
+        points: 100,
+      },
+      {
+        name: 5000,
+        points: 500,
+      },
+      {
+        name: 10000,
+        points: 1000,
+      },
+    ],
+    percentage_discount: [
       {
         percentage: 10,
         points: 200,
+        max_discount: null,
       },
       {
         percentage: 15,
         points: 300,
+        max_discount: null,
       },
     ],
-    expires_in_years: 1
+    // expires_in_years: 1,
   },
 ];
 
 module.exports = loyaltyConfguration;
-

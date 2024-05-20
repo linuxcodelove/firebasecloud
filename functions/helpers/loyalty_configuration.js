@@ -4,9 +4,7 @@ exports.setPayload = (obj, ind = null) => {
     point_per_rupee,
     rupee_per_point,
     min_point_to_redeem,
-    free_items,
-    discount,
-    expires_in_years,
+    reward_list,
     id
   } = obj;
 
@@ -14,9 +12,7 @@ exports.setPayload = (obj, ind = null) => {
     point_per_rupee,
     rupee_per_point,
     min_point_to_redeem,
-    free_items,
-    discount,
-    expires_in_years,
+    reward_list,
     id
   };
 

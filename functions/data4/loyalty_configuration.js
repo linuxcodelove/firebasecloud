@@ -4,33 +4,31 @@ const loyaltyConfguration = [
     point_per_rupee: 0.01,
     rupee_per_point: 1,
     min_point_to_redeem: 100,
-    free_items: [
+    reward_list: [
       {
-        name: "Coke",
+        id: 1,
+        points: 300,
+        discount_percentage: 10,
+        max_discount: 1000,
+      },
+      {
+        id: 2,
+        points: 500,
+        discount_percentage: 20,
+        max_discount: 2000,
+      },
+      {
+        id: 3,
+        points: 300,
+        discount_amount: 1000,
+      },
+      {
+        id: 4,
         points: 100,
-      },
-      {
-        name: "Beer",
-        points: 300,
-      },
-      {
-        name: "Fried chicken",
-        points: 50,
+        free_items: [2001],
       },
     ],
-    discount: [
-      {
-        percentage: 10,
-        points: 200,
-      },
-      {
-        percentage: 15,
-        points: 300,
-      },
-    ],
-    expires_in_years: 1
   },
 ];
 
 module.exports = loyaltyConfguration;
-
