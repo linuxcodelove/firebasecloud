@@ -4,50 +4,30 @@ const loyaltyConfguration = [
     point_per_rupee: 0.01,
     rupee_per_point: 1,
     min_point_to_redeem: 100,
-    free_items: [
+    reward_list: [
       {
-        id: 2001,
-        name: "coke",
-        points: 100,
-      },
-      {
-        id: 2002,
-        name: "Rum",
-        points: 500,
-      },
-      {
-        id: 2003,
-        name: "Brandy",
-        points: 400,
-      },
-    ],
-    flat_discount: [
-      {
-        price: 1000,
-        points: 100,
-      },
-      {
-        name: 5000,
-        points: 500,
-      },
-      {
-        name: 10000,
-        points: 1000,
-      },
-    ],
-    percentage_discount: [
-      {
-        percentage: 10,
-        points: 200,
-        max_discount: null,
-      },
-      {
-        percentage: 15,
+        id: 1,
         points: 300,
-        max_discount: null,
+        discount_percentage: 10,
+        max_discount: 1000,
+      },
+      {
+        id: 2,
+        points: 500,
+        discount_percentage: 20,
+        max_discount: 2000,
+      },
+      {
+        id: 3,
+        points: 300,
+        discount_amount: 1000,
+      },
+      {
+        id: 4,
+        points: 100,
+        free_items: [2001],
       },
     ],
-    // expires_in_years: 1,
   },
 ];
 
