@@ -184,7 +184,7 @@ const offers = [
     free_items: null,
     buy_one_get_one: null,
     buy_two_get_one: null,
-    one_for_two: null,
+    one_for_one: null,
     one_for_two: {
       buy_item: 15819,
       free_item: 15820,
