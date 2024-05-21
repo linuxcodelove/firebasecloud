@@ -5,6 +5,7 @@ const { setCustomerPayload } = require("../helpers/customer");
 const { formatDate, formSimpleQuery } = require("../helpers/common");
 const { Filter } = require("firebase-admin/firestore");
 const offers = require("../controllers/offerController");
+const loyaltyController = require("./loyaltyConfiguration");
 
 exports.getAllCustomerDetail = async (req, res) => {
   try {
@@ -289,27 +290,37 @@ exports.getCustomerFeedback = async (req, res) => {
   }
 };
 
+exports.getCustomer = async (mobile_number) => {
+  const querySnapshots = await db
+    .where("mobile_number", "==", mobile_number)
+    .get();
+
+  if (querySnapshots.empty) {
+    throw Error("No customer found with that number");
+  }
+  return querySnapshots.docs[0].data();
+};
+
 exports.getCustomerByMobile = async (req, res) => {
-  const mobile_number = req.query.mobile_number;
-  if (!mobile_number) return res.status(400).send("Mobile number is required");
   try {
-    const allOffers = await offers.getAllOffers();
-    const querySnapshots = await db
-      .where("mobile_number", "==", mobile_number)
-      .get();
-    const customer = querySnapshots.docs[0].data();
-    customer.offers = [];
-    // Assign all the offers that exists for the customer
-    allOffers.forEach((offer) => {
-      if (!offer.customers || offer.customers.includes(customer.customer_id)) {
-        customer.offers.push(offer);
-      }
-    });
+    const customer = await this.getCustomer(req.query.mobile_number, res);
+    // const allOffers = await offers.getAllOffers();
+    // customer.available_offers = [];
+    //   // Assign offers that are available for the customer
+    //   allOffers.forEach((offer) => {
+    //     if (!offer.customers || offer.customers.includes(customer.customer_id)) {
+    //       customer.available_offers.push(offer);
+    //     }
+    //   });
+    let { min_point_to_redeem, reward_list } =
+      await loyaltyController.getLoyaltyConfig((response) => response[0]);
+    customer.isCashbackAvailable =
+      customer.total_loyalty_points >= min_point_to_redeem;
+    customer.availableRewards = reward_list.filter(
+      (el) => customer.total_loyalty_points >= el.points
+    );
     return res.status(200).json(customer);
   } catch (error) {
-    console.error("Error fetching customer data:", error);
-    return res
-      .status(500)
-      .send("An error occurred while fetching customer data");
+    return res.status(400).send(String(error));
   }
 };
