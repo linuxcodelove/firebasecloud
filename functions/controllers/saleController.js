@@ -219,11 +219,13 @@ exports.createSale = async (req, res) => {
             `This reward requires ${reward?.points} loyalty points to redeem!`
           );
         loyalty_discount_amount = calculateDiscountAmount(reward, bill_amount);
+        points_redeemed = reward?.points || 0;
       }
       customerData = await updateCustomerData({
         ...req.body,
         ...customerDetails,
         points_gained,
+        points_redeemed,
       });
     }
 
