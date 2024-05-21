@@ -37,7 +37,6 @@ exports.getAllVisits = async (req, res) => {
       data: response,
     });
   } catch (error) {
-    console.error("Error fetching all visits", error);
     return res.status(500).send("An error occurred while Fetching all visits");
   }
 };
@@ -102,7 +101,6 @@ exports.mostVisited = async (req, res) => {
       data: mostVisitedCustomer,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send("Error most_visited_in_period");
   }
 };
@@ -146,7 +144,6 @@ exports.averageAmountSpent = async (req, res) => {
       data: Object.values(spentAmount),
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send("Error amount_spent_in_period");
   }
 };
@@ -192,7 +189,6 @@ exports.averageTimeSpent = async (req, res) => {
       data: Object.values(spentTime),
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send("Error time_spent_in_period");
   }
 };
@@ -307,7 +303,6 @@ exports.getLessVisitedCustomer = async (req, res) => {
     // Count the occurrences of each customer and store the entire doc.data() object
     const filteredCustomers = Object.entries(visitCounts)
       .filter(([customerId, data]) => {
-        console.log(customerId);
         if (targetVisitsCount === null) {
           return true; // Include all customers if no visits_count is provided
         }
@@ -426,13 +421,10 @@ exports.getVisitsInCertainDaysFiltered = async (req, res) => {
       }
     });
 
-    console.log(totalCustomers);
-
     return res.status(200).send({
       data: totalCustomers,
     });
   } catch (error) {
-    console.error("Error:", error);
     return res.status(500).send("Internal Server Error");
   }
 };
