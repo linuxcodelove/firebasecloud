@@ -26,12 +26,12 @@ exports.getAllCustomerDetail = async (req, res) => {
 
 exports.createCustomer = async (item, cb) => {
   try {
-    const customerDetail = db.doc("/" + item.customer_id + "/");
-    await customerDetail.set(item);
+    const customerDetail = await db.add(item);
+    await db.doc(customerDetail.id).update({ ...item, id: customerDetail.id });
     let response = (await customerDetail.get()).data();
-    return cb(response);
+    return cb({ ...response, id: customerDetail.id });
   } catch (error) {
-    return "Create customer Failed";
+    throw new Error("Create customer Failed");
   }
 };
 
@@ -296,7 +296,7 @@ exports.getCustomer = async (mobile_number) => {
     .get();
 
   if (querySnapshots.empty) {
-    throw Error("No customer found with that number");
+    return false;
   }
   return querySnapshots.docs[0].data();
 };
@@ -304,6 +304,7 @@ exports.getCustomer = async (mobile_number) => {
 exports.getCustomerByMobile = async (req, res) => {
   try {
     const customer = await this.getCustomer(req.query.mobile_number, res);
+    if (!customer) throw new Error("No customer found with that number");
     // const allOffers = await offers.getAllOffers();
     // customer.available_offers = [];
     //   // Assign offers that are available for the customer

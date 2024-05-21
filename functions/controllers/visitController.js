@@ -12,10 +12,9 @@ const { Filter } = require("firebase-admin/firestore");
 
 exports.createVisit = async (item, cb) => {
   try {
-    const visitDetail = db.doc("/" + item.id + "/");
-    await visitDetail.set(item);
+    const visitDetail = await db.add(item);
     let response = (await visitDetail.get()).data();
-    return cb(response);
+    return cb({ ...response, id: visitDetail.id });
   } catch (error) {
     return "Create visit Failed";
   }
