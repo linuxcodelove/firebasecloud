@@ -304,7 +304,7 @@ exports.getCustomer = async (mobile_number) => {
 exports.getCustomerByMobile = async (req, res) => {
   try {
     const customer = await this.getCustomer(req.query.mobile_number, res);
-    if (!customer) throw new Error("No customer found with that number");
+    if (!customer) throw new Error("No customer found with this number");
     // const allOffers = await offers.getAllOffers();
     // customer.available_offers = [];
     //   // Assign offers that are available for the customer

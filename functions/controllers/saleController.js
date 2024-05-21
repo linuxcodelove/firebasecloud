@@ -94,7 +94,6 @@ const calculateDiscountAmount = (
   return bill_amount >= discount_amount ? discount_amount : bill_amount;
 };
 
-// exports.createSale = async (req, res) => {
 //   try {
 //     let {
 //       id,
@@ -215,7 +214,7 @@ exports.createSale = async (req, res) => {
         loyalty_discount_amount = points_redeemed * rupee_per_point;
       } else if (loyalty_type == "R") {
         reward = reward_list.find((item) => item.id == reward_id);
-        if (points_redeemed < reward?.points)
+        if (customerDetails.total_loyalty_points < reward?.points)
           throw new Error(
             `This reward requires ${reward?.points} loyalty points to redeem!`
           );
