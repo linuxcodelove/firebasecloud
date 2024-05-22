@@ -305,14 +305,14 @@ exports.getCustomerByMobile = async (req, res) => {
   try {
     const customer = await this.getCustomer(req.query.mobile_number, res);
     if (!customer) throw new Error("No customer found with this number");
-    // const allOffers = await offers.getAllOffers();
-    // customer.available_offers = [];
-    //   // Assign offers that are available for the customer
-    //   allOffers.forEach((offer) => {
-    //     if (!offer.customers || offer.customers.includes(customer.customer_id)) {
-    //       customer.available_offers.push(offer);
-    //     }
-    //   });
+    const allOffers = await offers.getAllOffers();
+    customer.available_offers = [];
+    // Assign offers that are available for the customer
+    allOffers.forEach((offer) => {
+      if (!offer.customers || offer.customers.includes(customer.customer_id)) {
+        customer.available_offers.push(offer);
+      }
+    });
     let { min_point_to_redeem, reward_list } =
       await loyaltyController.getLoyaltyConfig((response) => response[0]);
     customer.isCashbackAvailable =
