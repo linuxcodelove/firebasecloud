@@ -9,7 +9,9 @@
 // 5 - Buy 1 get 2
 // 6 - one for one
 // 7 - one for two
-
+//**************applicable count*********************
+// 1 - redeemed once
+// 2 - redeemed multiple time
 
 const offers = [
   {
