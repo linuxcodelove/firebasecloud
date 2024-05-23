@@ -74,6 +74,7 @@ const updateCustomerData = async (item) => {
         item.points_redeemed,
         item.points_gained
       ),
+      last_visited_items: item.items,
     };
     await customerDoc.update(data);
     const response = (await customerDoc.get()).data();
@@ -93,73 +94,6 @@ const calculateDiscountAmount = (
   } else if (free_item) return 0;
   return bill_amount >= discount_amount ? discount_amount : bill_amount;
 };
-
-//   try {
-//     let {
-//       id,
-//       mobile_number,
-//       bill_amount,
-//       amount_paid,
-//       points_redeemed,
-//       items,
-//       loyalty_type,
-//       reward_id,
-//     } = req.body;
-
-//     let { min_point_to_redeem, point_per_rupee, rupee_per_point, reward_list } =
-//       await loyaltyController.getLoyaltyConfig((response) => response[0]);
-
-//     const customerSnapshot = await customerDb
-//       .where("mobile_number", "==", mobile_number)
-//       .get();
-
-//     let loyalty_discount_amount = 0;
-//     let points_gained = Math.floor(amount_paid * point_per_rupee);
-//     let reward = null;
-
-//     if (customerSnapshot.empty) {
-//       const customer = createCustomerData({ ...req.body, points_gained });
-//       customerController.createCustomer(customer, () => {});
-//     } else {
-//       const customerData = customerSnapshot.docs[0].data();
-
-//       if (
-//         customerData.total_loyalty_points < points_redeemed ||
-//         (points_redeemed &&
-//           customerData.total_loyalty_points < min_point_to_redeem)
-//       )
-//         throw new Error("Customer dont have enough loyalty points to redeem!");
-
-//       if (loyalty_type == "C") {
-//         loyalty_discount_amount = points_redeemed * rupee_per_point;
-//       } else if (loyalty_type == "R") {
-//         reward = reward_list.find((item) => item.id == reward_id);
-//         if (points_redeemed < reward.points)
-//           throw new Error(
-//             `This reward requires ${reward.points} loyalty points to redeem!`
-//           );
-//         loyalty_discount_amount = calculateDiscountAmount(reward, bill_amount);
-//       }
-//       updateCustomerData({ ...req.body, ...customerData, points_gained });
-//     }
-
-//     const visitData = createVisitData({
-//       ...req.body,
-//       loyalty_discount_amount,
-//       points_gained,
-//       points_redeemed,
-//       reward,
-//     });
-//     const response = await visitController.createVisit(
-//       visitData,
-//       (response) => response
-//     );
-//     await visitItemController.uploadVisitsItems(items, id);
-//     return res.status(200).json(response);
-//   } catch (error) {
-//     res.status(500).send(String(error));
-//   }
-// };
 
 const getCustomerAndLoyaltyConfig = async (mobile_number) => {
   try {
@@ -185,11 +119,16 @@ exports.createSale = async (req, res) => {
   try {
     const [
       customerDetails,
-      { point_per_rupee, min_point_to_redeem, rupee_per_point, reward_list },
+      {
+        amount_spent_per_point,
+        min_point_to_redeem,
+        amount_gained_per_point,
+        reward_list,
+      },
     ] = await getCustomerAndLoyaltyConfig(mobile_number);
 
     let loyalty_discount_amount = 0;
-    let points_gained = Math.floor(amount_paid * point_per_rupee);
+    let points_gained = Math.floor(amount_paid / amount_spent_per_point);
     let customerData = null;
     let customerPayload = null;
     let visitData = null;
@@ -211,7 +150,7 @@ exports.createSale = async (req, res) => {
         throw new Error("Customer dont have enough loyalty points to redeem!");
 
       if (loyalty_type == "C") {
-        loyalty_discount_amount = points_redeemed * rupee_per_point;
+        loyalty_discount_amount = points_redeemed * amount_gained_per_point;
       } else if (loyalty_type == "R") {
         reward = reward_list.find((item) => item.id == reward_id);
         if (customerDetails.total_loyalty_points < reward?.points)
@@ -225,6 +164,7 @@ exports.createSale = async (req, res) => {
         ...req.body,
         ...customerDetails,
         points_gained,
+        items,
         points_redeemed,
       });
     }

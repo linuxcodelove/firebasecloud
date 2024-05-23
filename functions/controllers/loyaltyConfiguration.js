@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const db = admin.firestore().collection("loyalty_configuration");
 const customerdb = admin.firestore().collection("customer_details");
-const json = require("../data3/loyalty_configuration");
+const json = require("../data4/loyalty_configuration");
 const { setPayload } = require("../helpers/loyalty_configuration");
 exports.uploadloyaltyConfigJson = async (req, res) => {
   try {
@@ -96,13 +96,13 @@ exports.redemption_amount = async (req, res) => {
   try {
     const loyaltyConfigResponse = await this.getLoyalty(req, res);
     const { data: loyaltyConfig } = loyaltyConfigResponse;
-    const pointPerRupee = loyaltyConfig.data[0].rupee_per_point;
+    const pointPerRupee = loyaltyConfig.data[0].amount_gained_per_point;
     const redeemed_amount = Math.floor(points_to_redeem * pointPerRupee);
     const amount_to_pay = amount - redeemed_amount;
     const customer_redemption =
       customer.total_loyalty_points - points_to_redeem;
     const current_payment_loyalty = Math.floor(
-      amount_to_pay * loyaltyConfig.data[0].point_per_rupee
+      amount_to_pay / loyaltyConfig.data[0].amount_spent_per_point
     );
     const remaining_loyalty_points = Math.floor(
       customer_redemption + current_payment_loyalty
